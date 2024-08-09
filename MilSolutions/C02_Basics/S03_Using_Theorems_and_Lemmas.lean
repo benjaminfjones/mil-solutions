@@ -21,7 +21,7 @@ end
 example (x y z : ℝ) (h₀ : x ≤ y) (h₁ : y ≤ z) : x ≤ z := by
   apply le_trans
   · apply h₀
-  . apply h₁
+  · apply h₁
 
 example (x y z : ℝ) (h₀ : x ≤ y) (h₁ : y ≤ z) : x ≤ z := by
   apply le_trans h₀
@@ -45,12 +45,12 @@ example (x : ℝ) : x ≤ x :=
 -- Try this.
 example (h₀ : a ≤ b) (h₁ : b < c) (h₂ : c ≤ d) (h₃ : d < e) : a < e := by
   apply lt_of_le_of_lt
-  . exact h₀
-  . have h₄ : b < d := by
+  · exact h₀
+  · have h₄ : b < d := by
       exact lt_of_lt_of_le h₁ h₂
     apply lt_trans
-    . exact h₄
-    . exact h₃
+    · exact h₄
+    · exact h₃
 
 example (h₀ : a ≤ b) (h₁ : b < c) (h₂ : c ≤ d) (h₃ : d < e) : a < e := by
   linarith
@@ -103,8 +103,8 @@ example : (0 : ℝ) < 1 := by norm_num
 example (h : a ≤ b) : log (1 + exp a) ≤ log (1 + exp b) := by
   let one_plus_exp_pos x : 0 < 1 + exp x := by
     apply add_pos
-    . norm_num
-    . exact exp_pos x
+    · norm_num
+    · exact exp_pos x
   apply log_le_log (one_plus_exp_pos a)
   apply add_le_add_left
   exact exp_le_exp.mpr h

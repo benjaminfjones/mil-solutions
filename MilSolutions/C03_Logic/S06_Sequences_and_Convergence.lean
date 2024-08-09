@@ -59,9 +59,9 @@ theorem convergesTo_add {s t : ℕ → ℝ} {a b : ℝ}
 theorem convergesTo_mul_const {s : ℕ → ℝ} {a : ℝ} (c : ℝ) (cs : ConvergesTo s a) :
     ConvergesTo (fun n ↦ c * s n) (c * a) := by
   by_cases h : c = 0
-  . convert convergesTo_const 0
+  · convert convergesTo_const 0
     <;> (rw [h]; ring)
-  . intro ε εpos
+  · intro ε εpos
     let εc := ε / abs c  -- convergence neighborhood, scaled by (abs c)
     have acpos : 0 < |c| := abs_pos.mpr h
     have εcpos : 0 < εc := div_pos εpos acpos
@@ -103,8 +103,8 @@ theorem aux {s t : ℕ → ℝ} {a : ℝ} (cs : ConvergesTo s a) (ct : Converges
   calc
     abs (s n * t n) = abs (s n) * abs (t n) := by rw [abs_mul]
     _                   ≤ B * abs (t n)     := by apply mul_le_mul_of_nonneg_right
-                                                  . exact le_of_lt (h₀ n (le_of_max_le_left hn))
-                                                  . apply abs_nonneg
+                                                  · exact le_of_lt (h₀ n (le_of_max_le_left hn))
+                                                  · apply abs_nonneg
     _                   < B * (ε / B)       := by apply (mul_lt_mul_left _).mpr h₁'
                                                   exact Bpos
     _                   = ε                 := by rw [mul_div_cancel₀ ε Bnonzero]

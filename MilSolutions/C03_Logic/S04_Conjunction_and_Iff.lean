@@ -65,8 +65,8 @@ example {x y : ℝ} (h : x ≤ y ∧ x ≠ y) : ¬y ≤ x :=
 
 example {m n : ℕ} (h : m ∣ n ∧ m ≠ n) : m ∣ n ∧ ¬n ∣ m := by
   constructor
-  . exact h.left
-  . intro h'
+  · exact h.left
+  · intro h'
     have : m = n := dvd_antisymm h.left h'
     exact h.right this
 
@@ -110,15 +110,15 @@ example {x y : ℝ} (h : x ≤ y) : ¬y ≤ x ↔ x ≠ y :=
 
 example {x y : ℝ} : x ≤ y ∧ ¬y ≤ x ↔ x ≤ y ∧ x ≠ y := by
   constructor
-  . rintro ⟨ hxly , hnylx ⟩
+  · rintro ⟨ hxly , hnylx ⟩
     constructor
-    . assumption
-    . intro hxy
+    · assumption
+    · intro hxy
       exact hnylx (le_of_eq hxy.symm)
-  . rintro ⟨ hxly, hxny ⟩
+  · rintro ⟨ hxly, hxny ⟩
     constructor
-    . assumption
-    . intro ylx
+    · assumption
+    · intro ylx
       exact hxny (eq_of_le_of_le hxly ylx)
 
 -- same example as above, but less verbose?
@@ -133,20 +133,20 @@ theorem aux {x y : ℝ} (h : x ^ 2 + y ^ 2 = 0) : x = 0 :=
 
 example (x y : ℝ) : x ^ 2 + y ^ 2 = 0 ↔ x = 0 ∧ y = 0 := by
   constructor
-  . intro h
+  · intro h
     constructor
-    . exact aux h
-    . rw [add_comm] at h
+    · exact aux h
+    · rw [add_comm] at h
       exact aux h
   -- alternate → , but more complicated:
-  -- . intro h
+  -- · intro h
   --   have hx : x = 0 := aux h
   --   have hy : y = 0 := by
   --     rw [hx, zero_pow (by norm_num), zero_add] at h
   --     apply pow_eq_zero h
   --   exact ⟨hx, hy⟩
 
-  . rintro ⟨rfl, rfl⟩  -- rfl pattern trick
+  · rintro ⟨rfl, rfl⟩  -- rfl pattern trick
     linarith
 
 
@@ -181,8 +181,8 @@ variable (a b : α)
 example : a < b ↔ a ≤ b ∧ a ≠ b := by
   rw [lt_iff_le_not_le]
   constructor
-  . exact fun h => ⟨ h.1, fun hanb => h.2 (le_of_eq hanb.symm) ⟩
-  . exact fun h => ⟨ h.1, fun hbla => h.2 (eq_of_le_of_le h.1 hbla) ⟩
+  · exact fun h => ⟨ h.1, fun hanb => h.2 (le_of_eq hanb.symm) ⟩
+  · exact fun h => ⟨ h.1, fun hbla => h.2 (eq_of_le_of_le h.1 hbla) ⟩
 
 end
 
@@ -201,8 +201,8 @@ example : a < b → b < c → a < c := by
   rintro ⟨hbc1, hbc2⟩
   have hac : a ≤ c := le_trans hab1 hbc1
   constructor
-  . assumption
-  . intro hca
+  · assumption
+  · intro hca
     exact hbc2 (le_trans hca hab1)
 
 end

@@ -45,16 +45,16 @@ theorem my_lemma4 :
     |x * y| = |x| * |y| := abs_mul x y
     _ ≤ |x| * ε := by
       apply mul_le_mul
-      . apply le_refl
-      . exact le_of_lt ylt
-      . exact abs_nonneg y
-      . exact abs_nonneg x
+      · apply le_refl
+      · exact le_of_lt ylt
+      · exact abs_nonneg y
+      · exact abs_nonneg x
     _ < 1 * ε := by
       apply mul_lt_mul
-      . exact lt_of_lt_of_le xlt ele1
-      . exact le_refl ε
-      . assumption
-      . simp
+      · exact lt_of_lt_of_le xlt ele1
+      · exact le_refl ε
+      · assumption
+      · simp
     _ = ε := by apply one_mul
 
 def FnUb (f : ℝ → ℝ) (a : ℝ) : Prop :=
@@ -77,28 +77,28 @@ example (hfa : FnLb f a) (hgb : FnLb g b) : FnLb (fun x ↦ f x + g x) (a + b) :
   intro x
   change a + b ≤ f x + g x
   apply add_le_add
-  . exact hfa x
-  . exact hgb x
+  · exact hfa x
+  · exact hgb x
 
 example (nnf : FnLb f 0) (nng : FnLb g 0) : FnLb (fun x ↦ f x * g x) 0 := by
   intro x
   change 0 ≤ f x * g x
   rw [← zero_mul 0]
   apply mul_le_mul
-  . apply nnf
-  . apply nng
-  . apply le_refl
-  . apply nnf
+  · apply nnf
+  · apply nng
+  · apply le_refl
+  · apply nnf
 
 example (hfa : FnUb f a) (hgb : FnUb g b) (nng : FnLb g 0) (nna : 0 ≤ a) :
     FnUb (fun x ↦ f x * g x) (a * b) := by
   intro x
   change f x * g x ≤ a * b
   apply mul_le_mul
-  . apply hfa
-  . apply hgb
-  . apply nng
-  . apply nna
+  · apply hfa
+  · apply hgb
+  · apply nng
+  · apply nna
 
 end
 

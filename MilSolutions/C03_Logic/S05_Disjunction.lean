@@ -25,7 +25,7 @@ example : x < |y| → x < y ∨ x < -y := by
   rcases le_or_gt 0 y with h | h
   · rw [abs_of_nonneg h]
     intro h; left; exact h
-  . rw [abs_of_neg h]
+  · rw [abs_of_neg h]
     intro h; right; exact h
 
 example : x < |y| → x < y ∨ x < -y := by
@@ -87,45 +87,45 @@ theorem abs_add (x y : ℝ) : |x + y| ≤ |x| + |y| := by
          _           ≥ -(x + y) := by rw [neg_add]
 
   rcases le_or_gt 0 (x+y) with h | h
-  . rw [abs_of_nonneg h] at h1
+  · rw [abs_of_nonneg h] at h1
     linarith
-  . rw [abs_of_neg h] at h2
+  · rw [abs_of_neg h] at h2
     linarith
   -- Alternate route:
   --
   -- suffices abs (x+y) - abs y ≤ abs x by linarith
   -- suffices abs (x+y) - abs y ≤ x ∨ abs (x+y) - abs y ≤ -x by {
   --   rcases this with h | h
-  --   . exact le_trans h (le_abs_self _)
-  --   . exact le_trans h (neg_le_abs_self _)
+  --   · exact le_trans h (le_abs_self _)
+  --   · exact le_trans h (neg_le_abs_self _)
   -- }
   -- rcases le_or_gt 0 x with hx | hx
-  -- . sorry
-  -- . sorry
+  -- · sorry
+  -- · sorry
 
 
 theorem lt_abs : x < |y| ↔ x < y ∨ x < -y := by
   constructor
-  . intro h
+  · intro h
     rcases le_or_gt 0 y with i | i
-    . left; rw [abs_of_nonneg i] at h; assumption
-    . right; rw [abs_of_neg i] at h; assumption
-  . intro hxy
+    · left; rw [abs_of_nonneg i] at h; assumption
+    · right; rw [abs_of_neg i] at h; assumption
+  · intro hxy
     rcases hxy with h | h
-    . exact lt_of_lt_of_le h (le_abs_self y)
-    . exact lt_of_lt_of_le h (neg_le_abs_self y)
+    · exact lt_of_lt_of_le h (le_abs_self y)
+    · exact lt_of_lt_of_le h (neg_le_abs_self y)
 
 theorem abs_lt : |x| < y ↔ -y < x ∧ x < y := by
   constructor
-  . intro h
+  · intro h
     rcases le_or_gt 0 x with i | i
-    . rw [abs_of_nonneg i] at h
+    · rw [abs_of_nonneg i] at h
       have h0 : -x ≤ x := by exact neg_le_self i
       have h1 : -y < x := by
         calc -y < -x := by exact neg_lt_neg h
              _  ≤ x := h0
       exact ⟨ h1, h ⟩
-    . rw [abs_of_neg i] at h
+    · rw [abs_of_neg i] at h
       have h0 : -y < x := by rw [← neg_neg y] at h; exact lt_of_neg_lt_neg h
       have hnxp : 0 ≤ -x := by apply le_of_neg_le_neg; simp only [neg_neg, neg_zero]; exact le_of_lt i
       have h1 : x < y := by
@@ -136,10 +136,10 @@ theorem abs_lt : |x| < y ↔ -y < x ∧ x < y := by
                nth_rw 1 [← neg_neg x]
                apply neg_le_self hnxp
       exact ⟨ h0, h1 ⟩
-  . rintro ⟨ h0, h1 ⟩
+  · rintro ⟨ h0, h1 ⟩
     rcases le_or_gt 0 x with h | h
-    . rw [abs_of_nonneg h]; assumption
-    . rw [abs_of_neg h]; apply lt_of_neg_lt_neg; rw [neg_neg]; assumption
+    · rw [abs_of_nonneg h]; assumption
+    · rw [abs_of_neg h]; apply lt_of_neg_lt_neg; rw [neg_neg]; assumption
 
 end MyAbs
 
@@ -150,13 +150,13 @@ example {x : ℝ} (h : x ≠ 0) : x < 0 ∨ x > 0 := by
   · left
     exact xlt
   · contradiction
-  . right; exact xgt
+  · right; exact xgt
 
 example {m n k : ℕ} (h : m ∣ n ∨ m ∣ k) : m ∣ n * k := by
   rcases h with ⟨a, rfl⟩ | ⟨b, rfl⟩
   · rw [mul_assoc]
     apply dvd_mul_right
-  . rw [mul_comm, mul_assoc]
+  · rw [mul_comm, mul_assoc]
     apply dvd_mul_right
 
 example {z : ℝ} (h : ∃ x y, z = x ^ 2 + y ^ 2 ∨ z = x ^ 2 + y ^ 2 + 1) : z ≥ 0 := by
@@ -168,8 +168,8 @@ example {x : ℝ} (h : x ^ 2 = 1) : x = 1 ∨ x = -1 := by
          _           = 0 := by rw [h]; apply sub_self
   have h2 : x+1 = 0 ∨ x-1 = 0 := eq_zero_or_eq_zero_of_mul_eq_zero h1
   rcases h2 with h1 | hm1
-  . right; exact (neg_eq_of_add_eq_zero_left h1).symm
-  . left; rw [(neg_eq_of_add_eq_zero_left hm1).symm, neg_neg]
+  · right; exact (neg_eq_of_add_eq_zero_left h1).symm
+  · left; rw [(neg_eq_of_add_eq_zero_left hm1).symm, neg_neg]
 
 -- same exact proof, but substituting 1 ↦ y
 example {x y : ℝ} (h : x ^ 2 = y ^ 2) : x = y ∨ x = -y := by
@@ -178,8 +178,8 @@ example {x y : ℝ} (h : x ^ 2 = y ^ 2) : x = y ∨ x = -y := by
          _           = 0 := by rw [h]; apply sub_self
   have h2 : x+y = 0 ∨ x-y = 0 := eq_zero_or_eq_zero_of_mul_eq_zero h1
   rcases h2 with h1 | hm1
-  . right; exact (neg_eq_of_add_eq_zero_left h1).symm
-  . left; rw [(neg_eq_of_add_eq_zero_left hm1).symm, neg_neg]
+  · right; exact (neg_eq_of_add_eq_zero_left h1).symm
+  · left; rw [(neg_eq_of_add_eq_zero_left hm1).symm, neg_neg]
 
 section
 variable {R : Type*} [CommRing R] [IsDomain R]
@@ -191,10 +191,10 @@ example (h : x ^ 2 = 1) : x = 1 ∨ x = -1 := by
          _           = 0 := by rw [h]; apply sub_self
   have h2 : x+1 = 0 ∨ x-1 = 0 := eq_zero_or_eq_zero_of_mul_eq_zero h1
   rcases h2 with h1 | hm1
-  . right; exact (neg_eq_of_add_eq_zero_left h1).symm
+  · right; exact (neg_eq_of_add_eq_zero_left h1).symm
   -- see below
-  -- . left; rw [(neg_eq_of_add_eq_zero_left hm1).symm, neg_neg]
-  . left
+  -- · left; rw [(neg_eq_of_add_eq_zero_left hm1).symm, neg_neg]
+  · left
     calc x = x - 1 + 1 := by ring
          _ = 1 := by rw [hm1, zero_add]
 
@@ -204,11 +204,11 @@ example (h : x ^ 2 = y ^ 2) : x = y ∨ x = -y := by
          _           = 0 := by rw [h]; apply sub_self
   have h2 : x+y = 0 ∨ x-y = 0 := eq_zero_or_eq_zero_of_mul_eq_zero h1
   rcases h2 with h1 | hm1
-  . right; exact (neg_eq_of_add_eq_zero_left h1).symm
+  · right; exact (neg_eq_of_add_eq_zero_left h1).symm
   -- In the more general CommRing context, the first rewrite below fails because of metavariable
   -- unification. Perhaps Lean can't deduce the SubtractionMonoid instance? Not sure...
-  -- . left; rw [(neg_eq_of_add_eq_zero_left hm1).symm, neg_neg]
-  . left
+  -- · left; rw [(neg_eq_of_add_eq_zero_left hm1).symm, neg_neg]
+  · left
     calc x = x - y + y := by ring
          _ = y := by rw [hm1, zero_add]
 
@@ -227,8 +227,8 @@ example (h : x ^ 2 = 1) : x = 1 ∨ x = -1 := by
          _           = 0 := by rw [h]; apply sub_self
   have h2 : x+1 = 0 ∨ x-1 = 0 := eq_zero_or_eq_zero_of_mul_eq_zero h1
   rcases h2 with h1 | hm1
-  . right; exact (neg_eq_of_add_eq_zero_left h1).symm
-  . left
+  · right; exact (neg_eq_of_add_eq_zero_left h1).symm
+  · left
     calc x = x - 1 + 1 := by noncomm_ring
          _ = 1 := by rw [hm1, zero_add]
 
@@ -239,26 +239,26 @@ example (P : Prop) : ¬¬P → P := by
   intro h
   cases em P
   · assumption
-  . contradiction
+  · contradiction
 
 example (P : Prop) : ¬¬P → P := by
   intro h
   by_cases h' : P
   · assumption
-  . contradiction
+  · contradiction
 
 example (P Q : Prop) : P → Q ↔ ¬P ∨ Q := by
   by_cases h : P
 
-  . constructor
-    . intro hpq
+  · constructor
+    · intro hpq
       have hq : Q := hpq h
       right; assumption
-    . intro hpoq p
+    · intro hpoq p
       rcases hpoq
-      . contradiction
-      . assumption
+      · contradiction
+      · assumption
 
-  . constructor
-    . intro; left; assumption
-    . intros; contradiction
+  · constructor
+    · intro; left; assumption
+    · intros; contradiction

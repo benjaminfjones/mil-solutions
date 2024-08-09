@@ -45,14 +45,14 @@ example : x ⊓ y = y ⊓ x := by
 
 example : x ⊓ y ⊓ z = x ⊓ (y ⊓ z) := by
   apply le_antisymm
-  . show x ⊓ y ⊓ z ≤ x ⊓ (y ⊓ z)
+  · show x ⊓ y ⊓ z ≤ x ⊓ (y ⊓ z)
     have hx  : (x ⊓ y) ⊓ z ≤ x := le_trans (inf_le_left) (inf_le_left)
     have hy  : (x ⊓ y) ⊓ z ≤ y := le_trans (inf_le_left) (inf_le_right)
     have hz  : (x ⊓ y) ⊓ z ≤ z := inf_le_right
     have hyz : (x ⊓ y) ⊓ z ≤ y ⊓ z := le_inf hy hz
     exact le_inf hx hyz
 
-  . show x ⊓ (y ⊓ z) ≤ x ⊓ y ⊓ z
+  · show x ⊓ (y ⊓ z) ≤ x ⊓ y ⊓ z
     have hx  : x ⊓ (y ⊓ z) ≤ x := inf_le_left
     have hy  : x ⊓ (y ⊓ z) ≤ y := le_trans (inf_le_right) (inf_le_left)
     have hz  : x ⊓ (y ⊓ z) ≤ z := le_trans (inf_le_right) (inf_le_right)
@@ -63,21 +63,21 @@ example : x ⊔ y = y ⊔ x := by
   have h : ∀ a b : α , a ⊔ b ≤ b ⊔ a := by
     intros
     apply sup_le
-    . apply le_sup_right
-    . apply le_sup_left
+    · apply le_sup_right
+    · apply le_sup_left
   exact le_antisymm (h x y) (h y x)
 
 -- same proof structure as for infimum, but flipped left/right and le/ge
 example : x ⊔ y ⊔ z = x ⊔ (y ⊔ z) := by
   apply le_antisymm
-  . show x ⊔ y ⊔ z ≤ x ⊔ (y ⊔ z)
+  · show x ⊔ y ⊔ z ≤ x ⊔ (y ⊔ z)
     have hx  :     x ≤ x ⊔ (y ⊔ z) := le_sup_left
     have hy  :     y ≤ x ⊔ (y ⊔ z) := le_trans (le_sup_left) (le_sup_right)
     have hz  :     z ≤ x ⊔ (y ⊔ z) := le_trans (le_sup_right) (le_sup_right)
     have hxy : x ⊔ y ≤ x ⊔ (y ⊔ z) := sup_le hx hy
     exact sup_le hxy hz
 
-  . show x ⊔ (y ⊔ z) ≤ (x ⊔ y) ⊔ z
+  · show x ⊔ (y ⊔ z) ≤ (x ⊔ y) ⊔ z
     have hx  :     x ≤ (x ⊔ y) ⊔ z := le_trans (le_sup_left) (le_sup_left)
     have hy  :     y ≤ (x ⊔ y) ⊔ z := le_trans (le_sup_right) (le_sup_left)
     have hz  :     z ≤ (x ⊔ y) ⊔ z := le_sup_right
@@ -86,20 +86,20 @@ example : x ⊔ y ⊔ z = x ⊔ (y ⊔ z) := by
 
 theorem absorb1 : x ⊓ (x ⊔ y) = x := by
   apply le_antisymm
-  . show x ⊓ (x ⊔ y) ≤ x
+  · show x ⊓ (x ⊔ y) ≤ x
     apply inf_le_left
-  . show x ≤ x ⊓ (x ⊔ y)
+  · show x ≤ x ⊓ (x ⊔ y)
     apply le_inf
-    . apply le_refl
-    . apply le_sup_left
+    · apply le_refl
+    · apply le_sup_left
 
 theorem absorb2 : x ⊔ x ⊓ y = x := by
   apply le_antisymm
-  . show x ⊔ x ⊓ y ≤ x
+  · show x ⊔ x ⊓ y ≤ x
     apply sup_le
-    . apply le_refl
-    . apply inf_le_left
-  . show x ≤ x ⊔ x ⊓ y
+    · apply le_refl
+    · apply inf_le_left
+  · show x ≤ x ⊔ x ⊓ y
     apply le_sup_left
 
 end
@@ -165,10 +165,10 @@ variable (a b c : R)
 example : 0 ≤ a → 0 ≤ b → 0 ≤ a * b := by
   intro ha hb
   apply Or.elim (eq_or_lt_of_le ha)
-  . intro haz; rw [← haz, zero_mul]
-  . apply Or.elim (eq_or_lt_of_le hb)
-    . intro hbz _; rw [← hbz, mul_zero]
-    . intro hap hbp
+  · intro haz; rw [← haz, zero_mul]
+  · apply Or.elim (eq_or_lt_of_le hb)
+    · intro hbz _; rw [← hbz, mul_zero]
+    · intro hap hbp
       apply le_of_lt
       apply mul_pos
       repeat assumption
