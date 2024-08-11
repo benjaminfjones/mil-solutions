@@ -86,19 +86,48 @@ example (h : Surjective f) : u ⊆ f '' (f ⁻¹' u) := by
 
 
 example (h : s ⊆ t) : f '' s ⊆ f '' t := by
-  sorry
+  intro y hy
+  rcases hy with ⟨ x, xs, fxy⟩
+  have : x ∈ t := h xs
+  use x
 
-example (h : u ⊆ v) : f ⁻¹' u ⊆ f ⁻¹' v := by
-  sorry
 
+example (h : u ⊆ v) : f ⁻¹' u ⊆ f ⁻¹' v :=
+  -- { x | ∃ y ∈ u ∧ f x = y } → { x | ∃ y ∈ v ∧ f x = y }
+  fun _x xfu => h xfu
+
+-- AKA: `preimage_union`
 example : f ⁻¹' (u ∪ v) = f ⁻¹' u ∪ f ⁻¹' v := by
-  sorry
+  ext x
+  constructor
+  · rintro (hu | hv)
+    · left; assumption
+    right; assumption
+  rintro (xfu | xfv)
+  · left; assumption
+  right; assumption
+
 
 example : f '' (s ∩ t) ⊆ f '' s ∩ f '' t := by
-  sorry
+  rintro y ⟨x, ⟨xs, xt⟩, fxy⟩
+  constructor
+  rw [← fxy]
+  use x
+  use x
+
 
 example (h : Injective f) : f '' s ∩ f '' t ⊆ f '' (s ∩ t) := by
-  sorry
+  rintro y ⟨yfs, yft⟩
+  rcases yfs with ⟨x, xs, fxy⟩  -- an `x` mapping to `y` in `f '' s`
+  use x
+  -- could use refine ⟨?_, fxy⟩, but we can emphasize the remaining goal with suffices
+  suffices xst : x ∈ s ∩ t by exact ⟨xst, fxy⟩
+  rcases yft with ⟨x', xt, fxy'⟩
+  rw [← fxy] at fxy'
+  have xx' : x' = x := h fxy'
+  rw [xx'] at xt
+  exact ⟨xs, xt⟩
+
 
 example : f '' s \ f '' t ⊆ f '' (s \ t) := by
   sorry
