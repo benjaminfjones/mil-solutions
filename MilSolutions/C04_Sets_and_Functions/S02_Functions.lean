@@ -15,35 +15,75 @@ open Set
 
 example : f ⁻¹' (u ∩ v) = f ⁻¹' u ∩ f ⁻¹' v := by
   ext
+  -- simp only [preimage_inter, mem_inter_iff, mem_preimage]
   rfl
 
+#check f '' s  -- : Set β
+
+-- Note: The rintro decompositons don't actually need to rewrite `f x = y` using `rfl`
+-- because of definitional equality
 example : f '' (s ∪ t) = f '' s ∪ f '' t := by
   ext y; constructor
-  · rintro ⟨x, xs | xt, rfl⟩
+  · -- y ∈ f '' (s ∪ t) defined as
+    -- ∃ x, x ∈ s ∪ t ∧ f x = y
+    rintro ⟨x, xs | xt, _ /- rfl -/⟩
     · left
       use x, xs
     right
     use x, xt
-  rintro (⟨x, xs, rfl⟩ | ⟨x, xt, rfl⟩)
+  rintro (⟨x, xs, _ /- rfl -/⟩ | ⟨x, xt, _ /- rfl -/⟩)
   · use x, Or.inl xs
   use x, Or.inr xt
 
 example : s ⊆ f ⁻¹' (f '' s) := by
   intro x xs
   show f x ∈ f '' s
-  use x, xs
+  -- use x, xs  -- Done
+  -- illustrates how `use` follows up with `rfl` when it can close the goal
+  refine ⟨ x, xs, ?_ ⟩
+  rfl
 
+-- AKA: `image_subset_iff`
+--
+-- `image f` and  `preimage f` are an instance of a Galois connection between Set α and Set β,
+-- each partially ordered by the subset relation.
 example : f '' s ⊆ v ↔ s ⊆ f ⁻¹' v := by
-  sorry
+  constructor
+  · intro fsv
+    -- fsv : { y | ∃ x ∈ s, f x = y } → v
+    intro x xs
+    have h : f x ∈ f '' s := by
+      refine ⟨ x, xs, ?_ ⟩
+      rfl
+    have h' : f x ∈ v := fsv h
+    assumption
+  intro ssv  -- s → f ⁻¹' v
+  -- goal: exhibit a fn from f '' s → v
+  intro z zfs
+  rcases zfs with ⟨w, hw, rfl⟩
+  exact ssv hw
+
 
 example (h : Injective f) : f ⁻¹' (f '' s) ⊆ s := by
-  sorry
+  intro x xffs
+  have hfx : f x ∈ f '' s := xffs  -- restate the defintion
+  rcases hfx with ⟨y, hy, fxfy⟩
+  rw [← h fxfy]
+  assumption
 
 example : f '' (f ⁻¹' u) ⊆ u := by
-  sorry
+  rintro y ⟨z, hz, rfl⟩
+  -- ⊢ f z ∈ u  def=  z ∈ f ⁻¹' u
+  assumption
+
 
 example (h : Surjective f) : u ⊆ f '' (f ⁻¹' u) := by
-  sorry
+  intro y yu
+  rcases h y with ⟨x, hx⟩
+  have hxu : f x ∈ u := by rw [hx]; assumption
+  refine ⟨ x, hxu, ?_⟩
+  assumption
+
 
 example (h : s ⊆ t) : f '' s ⊆ f '' t := by
   sorry
