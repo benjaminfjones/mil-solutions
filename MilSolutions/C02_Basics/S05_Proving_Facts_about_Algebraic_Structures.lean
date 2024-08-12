@@ -177,7 +177,7 @@ example : 0 ≤ a → 0 ≤ b → 0 ≤ a * b := by
 theorem nonneg_sub_of_le (h : a ≤ b) : 0 ≤ b - a := by
   have h1 : -a + a ≤ -a + b := (add_le_add_left h) (-a)
   have h2 : 0 ≤ -a + b := by
-    rw [add_comm (-a) a, add_neg_self] at h1
+    rw [add_comm (-a) a, add_neg_cancel] at h1
     assumption
   rw [add_comm] at h2
   rw [← Ring.sub_eq_add_neg] at h2
@@ -187,13 +187,13 @@ theorem nonneg_sub_of_le (h : a ≤ b) : 0 ≤ b - a := by
 example (h : a ≤ b) : 0 ≤ b - a := by
   rw [Ring.sub_eq_add_neg]
   rw [add_comm]
-  rw [← add_neg_self a]
+  rw [← add_neg_cancel a]
   rw [add_comm]
   apply (add_le_add_left h)
 
 theorem le_of_nonneg_sub (h: 0 ≤ b - a) : a ≤ b := by
   rw [← zero_add b]
-  rw [← add_neg_self a]
+  rw [← add_neg_cancel a]
   rw [add_assoc]
   nth_rw 1 [← add_zero a]
   apply add_le_add_left
