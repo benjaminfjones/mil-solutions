@@ -192,10 +192,14 @@ example (i₀ : I) (injf : Injective f) : (⋂ i, f '' A i) ⊆ f '' ⋂ i, A i 
 
 
 example : (f ⁻¹' ⋃ i, B i) = ⋃ i, f ⁻¹' B i := by
-  sorry
+  ext x
+  simp only [mem_preimage, mem_iUnion]
+
 
 example : (f ⁻¹' ⋂ i, B i) = ⋂ i, f ⁻¹' B i := by
-  sorry
+  ext x
+  simp only [mem_preimage, mem_iInter]
+
 
 example : InjOn f s ↔ ∀ x₁ ∈ s, ∀ x₂ ∈ s, f x₁ = f x₂ → x₁ = x₂ :=
   Iff.refl _
