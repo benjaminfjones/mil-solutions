@@ -130,22 +130,58 @@ example (h : Injective f) : f '' s ∩ f '' t ⊆ f '' (s ∩ t) := by
 
 
 example : f '' s \ f '' t ⊆ f '' (s \ t) := by
-  sorry
+  intro a ha
+  simp_all only [mem_diff, mem_image, not_exists, not_and]
+  obtain ⟨⟨w, ⟨ws, fwa⟩⟩, aright⟩ := ha
+  subst fwa
+  use w
+  simp_all only [true_and, and_true]
+  intro hwt
+  have : ¬ f w = f w := aright w hwt
+  contradiction
 
+
+-- AKA: `preimage_diff`
 example : f ⁻¹' u \ f ⁻¹' v ⊆ f ⁻¹' (u \ v) := by
-  sorry
+  simp_all only [preimage_diff, subset_refl]
 
+-- aesop proves this in 24 lines
+-- we have 12 lines
 example : f '' s ∩ v = f '' (s ∩ f ⁻¹' v) := by
-  sorry
+  ext x
+  simp_all only [mem_inter_iff, mem_image, mem_preimage]
+  constructor
+  · rintro ⟨⟨x1, x1s, fx1x⟩, xv⟩
+    use x1
+    refine ⟨⟨x1s, ?_⟩, fx1x⟩
+    rwa [fx1x]
+  · rintro ⟨x1, ⟨x1s, fx1v⟩, fx1x⟩
+    rw [← fx1x] at *
+    constructor
+    · use x1
+    assumption
+
 
 example : f '' (s ∩ f ⁻¹' u) ⊆ f '' s ∩ u := by
-  sorry
+  -- convert to preimage, which ends up not depending on `u` at all
+  simp_all only [subset_inter_iff, image_subset_iff, inter_subset_right, and_true]
+  have : s ∩ f ⁻¹' u ⊆ s := by apply inter_subset_left
+  apply subset_trans this
+  exact subset_preimage_image f s
+
 
 example : s ∩ f ⁻¹' u ⊆ f ⁻¹' (f '' s ∩ u) := by
-  sorry
+  simp only [preimage_inter, subset_inter_iff, inter_subset_right, and_true]
+  -- same exact proof as above after the simp
+  have : s ∩ f ⁻¹' u ⊆ s := by apply inter_subset_left
+  apply subset_trans this
+  exact subset_preimage_image f s
+
 
 example : s ∪ f ⁻¹' u ⊆ f ⁻¹' (f '' s ∪ u) := by
-  sorry
+  simp only [preimage_union, union_subset_iff, subset_union_right, and_true]
+  apply subset_trans (subset_preimage_image f s)
+  exact subset_union_left
 
 variable {I : Type*} (A : I → Set α) (B : I → Set β)
 

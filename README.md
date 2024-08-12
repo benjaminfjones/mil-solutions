@@ -3,7 +3,7 @@ Solutions and tinkering with the [Mathematics in Lean4](https://github.com/leanp
 
 ## TODO
 
-- [ ] finish set theoretic identities in C04 S02
+- [x] finish set theoretic identities in C04 S02
 - [ ] add upgrading instructions
 
 ## Development
