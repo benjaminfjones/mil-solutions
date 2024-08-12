@@ -150,13 +150,46 @@ example : s ∪ f ⁻¹' u ⊆ f ⁻¹' (f '' s ∪ u) := by
 variable {I : Type*} (A : I → Set α) (B : I → Set β)
 
 example : (f '' ⋃ i, A i) = ⋃ i, f '' A i := by
-  sorry
+  ext y
+  constructor
+  · rintro ⟨x, xs, fxy⟩
+    rw [mem_iUnion] at *
+    rcases xs with ⟨j, xAj⟩
+    use j
+    have him : f x ∈ f '' (A j) := by exact mem_image_of_mem f xAj
+    rwa [fxy] at him
+  rw [mem_iUnion]
+  rintro ⟨j, x, xAj, fxy⟩
+  have hxUAi : x ∈ ⋃ i, A i := by rw [mem_iUnion]; use j
+  rw [← fxy]
+  exact mem_image_of_mem f hxUAi
+
 
 example : (f '' ⋂ i, A i) ⊆ ⋂ i, f '' A i := by
-  sorry
+  rintro y ⟨x, xAj, fxy⟩
+  rw [mem_iInter] at *
+  intro i
+  rw [← fxy]
+  exact mem_image_of_mem f (xAj i)
 
-example (i : I) (injf : Injective f) : (⋂ i, f '' A i) ⊆ f '' ⋂ i, A i := by
-  sorry
+
+-- Note: original does not have a typo extra hypothesis: `(i : I)`, it is required
+-- unless we resort to the axiom of choice for `I`.
+example (i₀ : I) (injf : Injective f) : (⋂ i, f '' A i) ⊆ f '' ⋂ i, A i := by
+  rw [subset_def]
+  intro x
+  rw [mem_iInter]
+  intro hx
+  rcases hx i₀ with ⟨z, _, fzx⟩
+  refine ⟨z, ?_, fzx⟩
+
+  show z ∈ ⋂ i, A i
+  rw [mem_iInter]
+  intro j
+  rcases hx j with ⟨zj, zjAj, fzjx⟩
+  have zzj : z = zj := injf (Eq.trans fzx fzjx.symm)
+  rwa [← zzj] at zjAj
+
 
 example : (f ⁻¹' ⋃ i, B i) = ⋃ i, f ⁻¹' B i := by
   sorry
