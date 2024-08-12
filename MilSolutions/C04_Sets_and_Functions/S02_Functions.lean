@@ -265,16 +265,45 @@ example : range exp = { y | y > 0 } := by
   rw [exp_log ypos]
 
 example : InjOn sqrt { x | x ≥ 0 } := by
-  sorry
+  intro x1 x1nn x2 x2nn h
+  calc
+    x1 = (√x1)^2 := by apply (sq_sqrt x1nn).symm
+    _  = (√x2)^2 := by rw [h]
+    _  = x2      := by apply sq_sqrt x2nn
 
+-- same proof
 example : InjOn (fun x ↦ x ^ 2) { x : ℝ | x ≥ 0 } := by
-  sorry
+  intro x1 x1nn x2 x2nn h
+  have h' : x1^2 = x2^2 := by assumption  -- restate h
+  calc
+    x1 = √(x1^2) := by apply (sqrt_sq x1nn).symm
+    _  = √(x2^2) := by rw [h']
+    _  = x2      := by apply sqrt_sq x2nn
 
 example : sqrt '' { x | x ≥ 0 } = { y | y ≥ 0 } := by
-  sorry
+  ext z
+  constructor
+  · rintro ⟨x, _, sqrt_xz⟩
+    have sqrt_x_nn : 0 ≤ √x := by apply sqrt_nonneg
+    rwa [sqrt_xz] at sqrt_x_nn
+  intro znn
+  use z^2
+  constructor
+  · show 0 ≤ z^2
+    apply sq_nonneg
+  exact sqrt_sq znn
 
 example : (range fun x ↦ x ^ 2) = { y : ℝ | y ≥ 0 } := by
-  sorry
+  ext z
+  constructor
+  · rintro ⟨x, fxz⟩
+    have h : x^2 = z := fxz  -- restate fxz
+    rw [← h]
+    show 0 ≤ x^2  -- restate goal; didn't think this would be neccesary
+    apply sq_nonneg
+  intro h
+  use √z
+  exact sq_sqrt h
 
 end
 
