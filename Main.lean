@@ -12,6 +12,10 @@ import MilSolutions.C03_Logic.S03_Negation
 import MilSolutions.C03_Logic.S04_Conjunction_and_Iff
 import MilSolutions.C03_Logic.S05_Disjunction
 import MilSolutions.C03_Logic.S06_Sequences_and_Convergence
+-- C04
+import MilSolutions.C04_Sets_and_Functions.S01_Sets
+import MilSolutions.C04_Sets_and_Functions.S02_Functions
+import MilSolutions.C04_Sets_and_Functions.S03_The_Schroeder_Bernstein_Theorem
 
 def main : IO Unit :=
   IO.println s!"Hello, {hello}!"
