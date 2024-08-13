@@ -334,11 +334,42 @@ variable (f : α → β)
 
 open Function
 
-example : Injective f ↔ LeftInverse (inverse f) f :=
-  sorry
+#print LeftInverse
+#print RightInverse
 
+-- TODO: could be shorter, oneline?
+example : Injective f ↔ LeftInverse (inverse f) f := by
+  -- ∀ x1 x2, f x1 = f x2 → x1 = x2  ↔  ∀ x, (inverse f) (f x) = x
+  constructor
+  · intro finj x
+    have hinv : ∃z, f z = f x := by use x
+    rw [inverse, dif_pos hinv]
+    exact finj (Classical.choose_spec hinv)
+  intro hli x1 x2 he
+  have hli2 : (inverse f) (f x2) = x2 := hli x2
+  exact (hli x1).symm.trans (he ▸ hli2)
+
+
+-- Pow, short proof! 💥
+--
+-- Using _'s to identify types, then unifying with things that can be constructed
+-- easily from context
+--
+-- aesop? and simp? get nowhere
+example : Injective f ↔ LeftInverse (inverse f) f :=
+  -- ∀ x1 x2, f x1 = f x2 → x1 = x2  ↔  ∀ x, (inverse f) (f x) = x
+  ⟨ fun finj => fun x => finj (inverse_spec (f x) (by use x)),
+    fun linv => fun x1 x2 fx1x2 => (linv x1).symm.trans (fx1x2.symm ▸ (linv x2))
+    -- more fully spelling out the motive in the substitution:
+    -- fun linv => fun x1 x2 fx1x2 => Eq.trans (linv x1).symm (Eq.subst (motive := fun z => (inverse f) z = x2) fx1x2.symm (linv x2))
+  ⟩
+
+
+-- Pow, short proof! 💥
 example : Surjective f ↔ RightInverse (inverse f) f :=
-  sorry
+  -- ∀ y, ∃ x, f x = y  ↔  ∀ y, f ((inverse f) y) = y
+  ⟨ fun fsurj => fun y => inverse_spec y (fsurj y),
+    fun rinv  => fun y => ⟨(inverse f) y, rinv y⟩⟩
 
 end
 
