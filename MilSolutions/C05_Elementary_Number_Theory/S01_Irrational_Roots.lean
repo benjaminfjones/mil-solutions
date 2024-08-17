@@ -1,4 +1,4 @@
-import MIL.Common
+import MilSolutions.Common
 import Mathlib.Data.Nat.Factorization.Basic
 import Mathlib.Data.Nat.Prime.Basic
 
@@ -14,6 +14,11 @@ example (m n : Nat) (h : m.Coprime n) : m.gcd n = 1 := by
 example : Nat.Coprime 12 7 := by norm_num
 
 example : Nat.gcd 12 8 = 4 := by norm_num
+
+-- Three equivalent formalizations of primality for `Nat`:
+-- 1. `Nat.Prime`
+-- 2. `Nat.prime_def_lt`
+-- 3. `Nat.Prime.eq_one_or_self_of_dvd`
 
 #check Nat.prime_def_lt
 
@@ -34,12 +39,18 @@ example : Nat.Prime 2 :=
 example : Nat.Prime 3 :=
   Nat.prime_three
 
-#check Nat.Prime.dvd_mul
-#check Nat.Prime.dvd_mul Nat.prime_two
-#check Nat.prime_two.dvd_mul
+#check Nat.Prime.dvd_mul  -- Irreducibility
+#check Nat.Prime.dvd_mul Nat.prime_two  -- metavariables left... ?
+#check Nat.prime_two.dvd_mul            -- metavariables left... ?
 
 theorem even_of_even_sqr {m : ℕ} (h : 2 ∣ m ^ 2) : 2 ∣ m := by
   rw [pow_two, Nat.prime_two.dvd_mul] at h
+  -- h : 2 | m ∨ 2 | m
+  cases h <;> assumption
+
+-- Generalize the above
+theorem dvdp_of_dvdp_sqr {m p: ℕ} (prime_p: p.Prime) (h : p ∣ m^2) : p ∣ m := by
+  rw [pow_two, prime_p.dvd_mul] at h
   cases h <;> assumption
 
 example {m : ℕ} (h : 2 ∣ m ^ 2) : 2 ∣ m :=
@@ -51,24 +62,44 @@ example (a b c : Nat) (h : a * b = a * c) (h' : a ≠ 0) : b = c :=
 
 example {m n : ℕ} (coprime_mn : m.Coprime n) : m ^ 2 ≠ 2 * n ^ 2 := by
   intro sqr_eq
-  have : 2 ∣ m := by
-    sorry
+  have : 2 ∣ m := Nat.Prime.dvd_of_dvd_pow Nat.prime_two (by use n^2)
   obtain ⟨k, meq⟩ := dvd_iff_exists_eq_mul_left.mp this
   have : 2 * (2 * k ^ 2) = 2 * n ^ 2 := by
     rw [← sqr_eq, meq]
     ring
   have : 2 * k ^ 2 = n ^ 2 :=
-    sorry
+    (mul_right_inj' (by norm_num)).mp this
   have : 2 ∣ n := by
-    sorry
+    apply even_of_even_sqr
+    exact ⟨k^2, this.symm⟩
   have : 2 ∣ m.gcd n := by
-    sorry
+    apply dvd_gcd <;> assumption
   have : 2 ∣ 1 := by
-    sorry
+    rw [coprime_mn] at this
+    assumption
   norm_num at this
 
 example {m n p : ℕ} (coprime_mn : m.Coprime n) (prime_p : p.Prime) : m ^ 2 ≠ p * n ^ 2 := by
-  sorry
+  intro sqr_eq
+  have : p ∣ m := Nat.Prime.dvd_of_dvd_pow prime_p (by use n^2)
+  obtain ⟨k, meq⟩ := dvd_iff_exists_eq_mul_left.mp this
+  have : p * (p * k ^ 2) = p * n ^ 2 := by
+    rw [← sqr_eq, meq]
+    ring
+  have : p * k ^ 2 = n ^ 2 :=
+    (mul_right_inj' prime_p.ne_zero).mp this
+  have : p ∣ n := by
+    apply dvdp_of_dvdp_sqr
+    assumption
+    exact ⟨k^2, this.symm⟩
+  have : p ∣ m.gcd n := by
+    apply dvd_gcd <;> assumption
+  have : p ∣ 1 := by
+    rw [coprime_mn] at this
+    assumption
+  norm_num at this
+
+-- TODO: the last 3 don't exist in `Nat` anymore? Find them somewhere else...
 #check Nat.factors
 #check Nat.prime_of_mem_factors
 #check Nat.prod_factors
@@ -117,4 +148,3 @@ example {m n k r : ℕ} (nnz : n ≠ 0) (pow_eq : m ^ k = r * n ^ k) {p : ℕ} :
   sorry
 
 #check multiplicity
-
