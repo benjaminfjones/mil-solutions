@@ -102,11 +102,11 @@ example {m n p : ℕ} (coprime_mn : m.Coprime n) (prime_p : p.Prime) : m ^ 2 ≠
   contradiction
 
 
--- TODO: the last 3 don't exist in `Nat` anymore? Find them somewhere else...
-#check Nat.factors
-#check Nat.prime_of_mem_factors
-#check Nat.prod_factors
-#check Nat.factors_unique
+#check Nat.primeFactorsList
+#check Nat.prime_of_mem_primeFactorsList
+#check Nat.prod_primeFactorsList
+#check Nat.primeFactorsList_unique
+
 
 theorem factorization_mul' {m n : ℕ} (mnez : m ≠ 0) (nnez : n ≠ 0) (p : ℕ) :
     (m * n).factorization p = m.factorization p + n.factorization p := by
