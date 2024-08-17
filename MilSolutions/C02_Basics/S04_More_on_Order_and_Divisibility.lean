@@ -88,7 +88,7 @@ example : min a b + c = min (a + c) (b + c) := by
     have hb : b - (-c) + (-c) = b := by apply sub_add_cancel
     rw [ha, hb, hac, hbc] at h
     have h2 : min (a + c) (b + c) + -c + c ≤ min a b + c := add_le_add_right h _
-    rw [add_assoc, add_left_neg, add_zero] at h2
+    rw [add_assoc, neg_add_cancel, add_zero] at h2
     assumption
 
 #check (abs_add : ∀ a b : ℝ, |a + b| ≤ |a| + |b|)
