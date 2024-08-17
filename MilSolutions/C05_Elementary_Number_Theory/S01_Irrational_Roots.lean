@@ -142,15 +142,26 @@ example {m n k r : ℕ} (nnz : n ≠ 0) (pow_eq : m ^ k = r * n ^ k) {p : ℕ} :
     k ∣ r.factorization p := by
   rcases r with _ | r
   · simp
-  have npow_nz : n ^ k ≠ 0 := fun npowz ↦ nnz (pow_eq_zero npowz)
+  -- have npow_nz : n ^ k ≠ 0 := fun npowz ↦ nnz (pow_eq_zero npowz)
+  have npow_nz : n ^ k ≠ 0 := by
+    intro nkz
+    obtain nz : n = 0 := pow_eq_zero nkz
+    exact nnz nz
   have eq1 : (m ^ k).factorization p = k * m.factorization p := by
-    sorry
+    apply factorization_pow'
   have eq2 : ((r + 1) * n ^ k).factorization p =
       k * n.factorization p + (r + 1).factorization p := by
-    sorry
+    rw [factorization_mul' (Nat.succ_ne_zero r) npow_nz]
+    rw [factorization_pow']
+    ring
   have : r.succ.factorization p = k * m.factorization p - k * n.factorization p := by
-    rw [← eq1, pow_eq, eq2, add_comm, Nat.add_sub_cancel]
+    rw [← eq1, pow_eq, eq2, add_comm]
+    rw [Nat.add_sub_cancel]  -- implicitly invokes (def?) `1.factorization p = 0`
   rw [this]
-  sorry
+  -- use m.factorization p - n.factorization p ... leads to subtraction identity to prove
+  apply Nat.dvd_sub'
+  use m.factorization p
+  use n.factorization p
+
 
 #check multiplicity
