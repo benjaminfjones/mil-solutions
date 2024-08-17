@@ -94,10 +94,13 @@ example {m n p : ℕ} (coprime_mn : m.Coprime n) (prime_p : p.Prime) : m ^ 2 ≠
     exact ⟨k^2, this.symm⟩
   have : p ∣ m.gcd n := by
     apply dvd_gcd <;> assumption
-  have : p ∣ 1 := by
+  have hp1 : p ∣ 1 := by
     rw [coprime_mn] at this
     assumption
-  norm_num at this
+  norm_num at hp1
+  have : 2 ≤ 1 := hp1 ▸ (Nat.prime_def_lt.mp prime_p).1
+  contradiction
+
 
 -- TODO: the last 3 don't exist in `Nat` anymore? Find them somewhere else...
 #check Nat.factors
