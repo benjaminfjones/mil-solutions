@@ -1,5 +1,5 @@
 import Mathlib.Data.Nat.Prime.Basic
-import MIL.Common
+import MilSolutions.Common
 
 open BigOperators
 
@@ -224,4 +224,3 @@ theorem primes_mod_4_eq_3_infinite : ∀ n, ∃ p > n, Nat.Prime p ∧ p % 4 = 3
   have : p = 3 := by
     sorry
   contradiction
-
