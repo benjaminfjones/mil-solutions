@@ -47,8 +47,23 @@ theorem dvd_fac {i n : ℕ} (ipos : 0 < i) (ile : i ≤ n) : i ∣ fac n := by
 
 theorem pow_two_le_fac (n : ℕ) : 2 ^ (n - 1) ≤ fac n := by
   rcases n with _ | n
-  · simp [fac]
-  sorry
+  · rw [fac]
+    norm_num
+  · induction' n with m ih
+    · rw [zero_add, fac, fac]
+      norm_num
+    rw [fac]
+    have pow_eq : 2^(m + 1 + 1 - 1) = 2 * 2^(m + 1 - 1) := by
+      calc
+        2^(m + 1 + 1 - 1) = 2^(1 + m + 1 - 1) := by rw [add_comm, add_assoc]
+        _                 = 2 * 2^(m + 1 - 1) := by
+                                                   simp only [add_tsub_cancel_right]
+                                                   ring
+    have m2 : 2 ≤ m + 1 + 1 := by norm_num
+    rw [pow_eq]
+    exact Nat.mul_le_mul m2 ih
+
+
 section
 
 variable {α : Type*} (s : Finset ℕ) (f : ℕ → ℕ) (n : ℕ)
@@ -94,12 +109,20 @@ example (a b c d e f : ℕ) : a * (b * c * f * (d * e)) = d * (a * f * e) * (c *
 theorem sum_id (n : ℕ) : ∑ i in range (n + 1), i = n * (n + 1) / 2 := by
   symm; apply Nat.div_eq_of_eq_mul_right (by norm_num : 0 < 2)
   induction' n with n ih
-  · simp
+  · simp only [zero_add, mul_one, range_one, sum_singleton, mul_zero]
   rw [Finset.sum_range_succ, mul_add 2, ← ih]
   ring
 
 theorem sum_sqr (n : ℕ) : ∑ i in range (n + 1), i ^ 2 = n * (n + 1) * (2 * n + 1) / 6 := by
-  sorry
+  symm; apply Nat.div_eq_of_eq_mul_right (by norm_num : 0 < 6)
+  induction' n with n ih
+  · rw [Finset.sum_range_succ, Finset.sum_range_zero]
+    norm_num
+  rw [Finset.sum_range_succ]
+  nth_rw 4 [mul_add]
+  rw [← ih]
+  ring
+
 end
 
 inductive MyNat
