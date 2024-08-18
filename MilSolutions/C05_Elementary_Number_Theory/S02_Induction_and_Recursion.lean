@@ -136,7 +136,7 @@ def add : MyNat → MyNat → MyNat
   | x, succ y => succ (add x y)
 
 def mul : MyNat → MyNat → MyNat
-  | x, zero => zero
+  | _, zero => zero
   | x, succ y => add (mul x y) x
 
 theorem zero_add (n : MyNat) : add zero n = n := by
@@ -157,13 +157,39 @@ theorem add_comm (m n : MyNat) : add m n = add n m := by
   rw [add, succ_add, ih]
 
 theorem add_assoc (m n k : MyNat) : add (add m n) k = add m (add n k) := by
-  sorry
+  induction' n with n ih
+  · rw [zero_add]
+    rfl
+  rw [succ_add, add, succ_add, ih]
+  rfl
+
 theorem mul_add (m n k : MyNat) : mul m (add n k) = add (mul m n) (mul m k) := by
-  sorry
+  induction' k with k ih
+  · rw [mul, add, add]
+  rw [add, mul, mul, ← add_assoc, ih]
+
 theorem zero_mul (n : MyNat) : mul zero n = zero := by
-  sorry
+  induction' n with n ih
+  · rw [mul]
+  rw [mul, add_comm, zero_add, ih]
+
 theorem succ_mul (m n : MyNat) : mul (succ m) n = add (mul m n) n := by
-  sorry
+  induction' n with n ih
+  · rw [mul, mul, zero_add]
+  -- ih: (m+1) * n = m * n + n
+  -- ⊢ (m+1) * (n+1) = m * (n+1) + (n+1)
+  rw [mul, mul]
+  -- ⊢ (m+1) * n + (m+1) = ((m*n + m) + (n+1))
+  rw [ih]
+  -- ⊢ (m*n + n) + (m+1) = ((m*n + m) + (n+1))
+  rw [add, add]
+  rw [succ.injEq]
+  -- ⊢ (m*n + n) + m = (m*n = m) + n
+  rw [add_assoc, add_assoc, add_comm m n]
+
 theorem mul_comm (m n : MyNat) : mul m n = mul n m := by
-  sorry
+  induction' n with n ih
+  · rw [mul, zero_mul]
+  rw [mul, ih, succ_mul]
+
 end MyNat
