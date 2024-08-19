@@ -5,12 +5,16 @@ open BigOperators
 
 namespace C05S03
 
-theorem two_le {m : ℕ} (h0 : m ≠ 0) (h1 : m ≠ 1) : 2 ≤ m := by
-  cases m; contradiction
-  case succ m =>
-    cases m; contradiction
-    repeat' apply Nat.succ_le_succ
-    apply zero_le
+theorem two_le {m : ℕ} (_h0 : m ≠ 0) (_h1 : m ≠ 1) : 2 ≤ m :=
+  -- cases m
+  -- case zero => contradiction
+  -- case succ m =>
+  match m with
+    | 0 => by contradiction
+    | Nat.succ m => by
+        cases m; contradiction
+        repeat' apply Nat.succ_le_succ
+        apply zero_le
 
 example {m : ℕ} (h0 : m ≠ 0) (h1 : m ≠ 1) : 2 ≤ m := by
   by_contra h
@@ -38,25 +42,38 @@ theorem exists_prime_factor {n : Nat} (h : 2 ≤ n) : ∃ p : Nat, p.Prime ∧ p
   have mgt2 : 2 ≤ m := two_le this mne1
   by_cases mp : m.Prime
   · use m, mp
-  . rcases ih m mltn mgt2 mp with ⟨p, pp, pdvd⟩
+  · rcases ih m mltn mgt2 mp with ⟨p, pp, pdvd⟩
     use p, pp
     apply pdvd.trans mdvdn
 
 theorem primes_infinite : ∀ n, ∃ p > n, Nat.Prime p := by
   intro n
   have : 2 ≤ Nat.factorial (n + 1) + 1 := by
-    sorry
+    -- TODO: make this more concise; it's overly long
+    apply Nat.succ_le_succ
+    rw [Nat.factorial]
+    refine Nat.one_le_iff_ne_zero.mpr ?_
+    apply mul_ne_zero
+    · exact Nat.succ_ne_zero n
+    exact ne_zero_of_lt (Nat.factorial_pos n)
   rcases exists_prime_factor this with ⟨p, pp, pdvd⟩
-  refine' ⟨p, _, pp⟩
+  refine ⟨p, ?_, pp⟩
   show p > n
   by_contra ple
-  push_neg  at ple
+  push_neg at ple
+  have pge2 : p ≥ 2 := (Nat.prime_def_lt.mp pp).1
   have : p ∣ Nat.factorial (n + 1) := by
-    sorry
+    apply Nat.dvd_factorial
+    · exact (by norm_num : 0 < 1).trans (Nat.lt_of_succ_le pge2)
+    exact ple.trans (Nat.le_succ n)
   have : p ∣ 1 := by
-    sorry
+    exact (Nat.dvd_add_iff_right this).mpr pdvd
   show False
-  sorry
+  rcases this with ⟨k, hk⟩
+  have : p = 1 := eq_one_of_mul_right hk.symm
+  rw [this] at pge2
+  contradiction
+
 open Finset
 
 section
