@@ -38,6 +38,7 @@ theorem exists_prime_factor {n : Nat} (h : 2 ≤ n) : ∃ p : Nat, p.Prime ∧ p
   have : m ≠ 0 := by
     intro mz
     rw [mz, zero_dvd_iff] at mdvdn
+    -- find contradiction from `m = 0 ∧ 2 ≤ m`
     linarith
   have mgt2 : 2 ≤ m := two_le this mne1
   by_cases mp : m.Prime
@@ -48,8 +49,10 @@ theorem exists_prime_factor {n : Nat} (h : 2 ≤ n) : ∃ p : Nat, p.Prime ∧ p
 
 theorem primes_infinite : ∀ n, ∃ p > n, Nat.Prime p := by
   intro n
+
+  -- using a prime factor of `n + 1` saves us from considering the case of
+  -- `n = 0` separately
   have : 2 ≤ Nat.factorial (n + 1) + 1 := by
-    -- TODO: make this more concise; it's overly long
     apply Nat.succ_le_succ
     rw [Nat.factorial]
     refine Nat.one_le_iff_ne_zero.mpr ?_
@@ -58,21 +61,21 @@ theorem primes_infinite : ∀ n, ∃ p > n, Nat.Prime p := by
     exact ne_zero_of_lt (Nat.factorial_pos n)
   rcases exists_prime_factor this with ⟨p, pp, pdvd⟩
   refine ⟨p, ?_, pp⟩
+
   show p > n
   by_contra ple
   push_neg at ple
-  have pge2 : p ≥ 2 := (Nat.prime_def_lt.mp pp).1
+  have pge2 : 2 ≤ p := (Nat.prime_def_lt.mp pp).1
   have : p ∣ Nat.factorial (n + 1) := by
     apply Nat.dvd_factorial
-    · exact (by norm_num : 0 < 1).trans (Nat.lt_of_succ_le pge2)
+    . exact Nat.zero_lt_one.trans (Nat.lt_of_succ_le pge2)
     exact ple.trans (Nat.le_succ n)
   have : p ∣ 1 := by
     exact (Nat.dvd_add_iff_right this).mpr pdvd
-  show False
   rcases this with ⟨k, hk⟩
   have : p = 1 := eq_one_of_mul_right hk.symm
   rw [this] at pge2
-  contradiction
+  contradiction  -- 2 ≤ 1
 
 open Finset
 
