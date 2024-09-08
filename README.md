@@ -3,9 +3,6 @@ Solutions and tinkering with the [Mathematics in Lean4](https://github.com/leanp
 
 ## TODO
 
-- [x] finish set theoretic identities in C04 S02
-- [ ] add upgrading instructions
-
 ## Development
 
 ### Setup
@@ -29,4 +26,11 @@ lake build
 
 ### Upgrading Lean & Mathlib
 
-TODO: This always bites me in the ass.
+- Update `lean-toolchain` to latest stable version of Lean4
+- Make sure mathlib require statement in `lakefile.lean` is:
+
+```
+require "leanprover-community" / "mathlib" @ git "v4.11.0"
+```
+
+- `lake update && lake build`

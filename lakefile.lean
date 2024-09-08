@@ -11,4 +11,4 @@ lean_lib «MilSolutions» where
 lean_exe "mil-solutions" where
   root := `Main
 
-require "leanprover-community" / "mathlib"
+require "leanprover-community" / "mathlib" @ git "v4.11.0"
