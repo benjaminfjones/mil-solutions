@@ -219,9 +219,11 @@ example (n : ℕ) : (4 * n + 3) % 4 = 3 := by
 theorem mod_4_eq_3_or_mod_4_eq_3 {m n : ℕ} (h : m * n % 4 = 3) : m % 4 = 3 ∨ n % 4 = 3 := by
   revert h
   rw [Nat.mul_mod]
-  have : m % 4 < 4 := Nat.mod_lt m (by norm_num)
+  have : m % 4 < 4 := Nat.mod_lt m (by norm_num)  -- to make `interval_cases` effective
   interval_cases m % 4 <;> simp [-Nat.mul_mod_mod]
+  -- all but case 2 < 4 are closed, disjunctions are simpflied to one junct
   have : n % 4 < 4 := Nat.mod_lt n (by norm_num)
+  -- every case below is False → False
   interval_cases n % 4 <;> simp
 
 theorem two_le_of_mod_4_eq_3 {n : ℕ} (h : n % 4 = 3) : 2 ≤ n := by
@@ -230,8 +232,15 @@ theorem two_le_of_mod_4_eq_3 {n : ℕ} (h : n % 4 = 3) : 2 ≤ n := by
       rw [neq] at h
       norm_num at h
 
+-- a simpler, stronger version of above that doesn't depend on `two_le`
+theorem three_le_of_mod_4_eq_3 {n : ℕ} (h : n % 4 = 3) : 3 ≤ n := by
+  by_contra hh
+  push_neg at hh
+  interval_cases n <;> contradiction
+
 theorem aux {m n : ℕ} (h₀ : m ∣ n) (h₁ : 2 ≤ m) (h₂ : m < n) : n / m ∣ n ∧ n / m < n := by
   sorry
+
 theorem exists_prime_factor_mod_4_eq_3 {n : Nat} (h : n % 4 = 3) :
     ∃ p : Nat, p.Prime ∧ p ∣ n ∧ p % 4 = 3 := by
   by_cases np : n.Prime
