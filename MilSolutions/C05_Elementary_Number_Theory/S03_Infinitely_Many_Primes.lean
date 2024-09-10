@@ -200,7 +200,7 @@ theorem bounded_of_ex_finset (Q : ℕ → Prop) :
   use s.sup id + 1
   intro k Qk
   apply Nat.lt_succ_of_le
-  show id k ≤ s.sup id
+  show id k ≤ s.sup id  -- change the goal to def. equal version involving `id`
   apply le_sup (hs k Qk)
 
 theorem ex_finset_of_bounded (Q : ℕ → Prop) [DecidablePred Q] :
@@ -208,7 +208,7 @@ theorem ex_finset_of_bounded (Q : ℕ → Prop) [DecidablePred Q] :
   rintro ⟨n, hn⟩
   use (range (n + 1)).filter Q
   intro k
-  simp [Nat.lt_succ_iff]
+  simp only [mem_filter, mem_range, Nat.lt_succ_iff, iff_and_self]
   exact hn k
 
 example : 27 % 4 = 3 := by norm_num
