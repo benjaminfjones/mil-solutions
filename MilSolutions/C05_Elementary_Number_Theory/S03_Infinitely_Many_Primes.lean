@@ -292,6 +292,34 @@ theorem exists_prime_factor_mod_4_eq_3 {n : Nat} (h : n % 4 = 3) :
     rcases ih (n / m) hnmltn h1 prime_nm with ⟨nm', prime_nm', nm'dvdn, nm'3mod4⟩
     use nm'
     exact ⟨prime_nm', Nat.dvd_trans nm'dvdn hnmdn, nm'3mod4⟩
+
+-- Side quest: examine the proof terms in a simple lemma to see what `linarith` boils down to
+/-
+Proof term when using `contradiction`
+  (fun mz =>
+    absurd
+      (Eq.mp
+        (congrArg (fun _a => 0 < _a)
+          (Eq.mp (congrArg (fun _a => _a) (propext zero_dvd_iff)) (Eq.mp (congrArg (fun _a => _a ∣ n) mz) h1)))
+        (Eq.mp (congrArg (fun _a => _a < n) mz) h2))
+      (of_decide_eq_false (Eq.refl (decide (0 < 0)))))
+  h3
+
+Proof term using `linarith`
+  (too big to include) but uses casts to `Int` and `zify` which rely on GMP-backed bignums
+-/
+
+#check Nat.rawCast
+#check Int.ofNat
+theorem side_quest {n m : Nat} (h1 : m ∣ n) (h2 : m < n) (h3 : m ≠ 1): 2 ≤ m := by?
+    apply two_le _ h3
+    intro mz
+    rw [mz, zero_dvd_iff] at h1
+    rw [mz, h1] at h2
+    contradiction
+    -- linarith
+
+
 example (m n : ℕ) (s : Finset ℕ) (h : m ∈ erase s n) : m ≠ n ∧ m ∈ s := by
   rwa [mem_erase] at h
 
