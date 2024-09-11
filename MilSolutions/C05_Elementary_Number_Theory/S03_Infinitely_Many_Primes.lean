@@ -327,10 +327,15 @@ example (m n : ℕ) (s : Finset ℕ) (h : m ∈ erase s n) : m ≠ n ∧ m ∈ s
   simp at h
   assumption
 
+#check Nat.dvd_refl
+#check Nat.dvd_sub'
+
 theorem primes_mod_4_eq_3_infinite : ∀ n, ∃ p > n, Nat.Prime p ∧ p % 4 = 3 := by
   by_contra h
   push_neg  at h
   rcases h with ⟨n, hn⟩
+  -- turn the bounded formulation into a finite set formulation in order to easily
+  -- reason about the members of the set without 3
   have : ∃ s : Finset Nat, ∀ p : ℕ, p.Prime ∧ p % 4 = 3 ↔ p ∈ s := by
     apply ex_finset_of_bounded
     use n
@@ -339,16 +344,45 @@ theorem primes_mod_4_eq_3_infinite : ∀ n, ∃ p > n, Nat.Prime p ∧ p % 4 = 3
     exact ⟨p, pltn, pp, p4⟩
   rcases this with ⟨s, hs⟩
   have h₁ : ((4 * ∏ i in erase s 3, i) + 3) % 4 = 3 := by
-    sorry
+    rw [← Nat.mod_add_mod, ← Nat.mod_mul_mod, Nat.mod_self, zero_mul, Nat.zero_mod, zero_add]
+
+  -- here is the crux
   rcases exists_prime_factor_mod_4_eq_3 h₁ with ⟨p, pp, pdvd, p4eq⟩
   have ps : p ∈ s := by
-    sorry
+    exact (hs p).mp ⟨pp, p4eq⟩
   have pne3 : p ≠ 3 := by
-    sorry
-  have : p ∣ 4 * ∏ i in erase s 3, i := by
-    sorry
+    intro p3
+    -- p divides two terms in a linear equality
+    have : p ∣ 4 * ∏ i ∈ s.erase 3, i :=
+      (Nat.add_sub_cancel (4 * ∏ i ∈ s.erase 3, i) 3) ▸ Nat.dvd_sub' pdvd (p3 ▸ dvd_refl p)
+    have : p ∣ ∏ i ∈ s.erase 3, i := by
+      refine @Nat.Coprime.dvd_of_dvd_mul_left p 4 _ ?_ this
+      rw [p3]
+      norm_num
+    have : p ∈ s.erase 3 := by
+      apply mem_of_dvd_prod_primes pp
+      intro k hk
+      rw [mem_erase] at hk
+      exact ((hs k).mpr hk.2).1
+      assumption
+    rw [mem_erase] at this
+    exact this.1 p3
+    -- phew!
+  have : p ∣ 4 * ∏ i in s.erase 3, i := by
+    -- p ≠ 3 means p ∈ s.erase 3
+    have : p ∈ s.erase 3 := by
+      rw [mem_erase]
+      exact ⟨pne3, ps⟩
+    -- thus p divides the product, hence 3 divides 4 * the product
+    have : p ∣ ∏ i in erase s 3, i := dvd_prod_of_mem _ this
+    exact dvd_trans this (dvd_mul_left _ _)
   have : p ∣ 3 := by
-    sorry
+    -- again, p divides two terms in a linear equality
+    have : p ∣ 4 * ∏ i in erase s 3, i + 3 - 4 * ∏ i in erase s 3, i :=
+      (Nat.add_sub_cancel (4 * ∏ i ∈ s.erase 3, i) 3) ▸ Nat.dvd_sub' pdvd this
+    rwa [Nat.add_sub_cancel_left] at this
   have : p = 3 := by
-    sorry
+    have : p ≤ 3 := by exact Nat.le_of_dvd (by norm_num) this
+    -- {0, 1, 2} cases all show False from a contradictory hypothesis
+    interval_cases p <;> trivial
   contradiction
