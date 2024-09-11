@@ -238,8 +238,26 @@ theorem three_le_of_mod_4_eq_3 {n : ℕ} (h : n % 4 = 3) : 3 ≤ n := by
   push_neg at hh
   interval_cases n <;> contradiction
 
+/-
+Nat.div_dvd_of_dvd {m n : ℕ} (h : n ∣ m) : m / n ∣ m
+-/
+#check Nat.div_dvd_of_dvd
+/-
+Nat.div_lt_self {n k : ℕ} (hLtN : 0 < n) (hLtK : 1 < k) : n / k < n
+-/
+#check Nat.div_lt_self
+
 theorem aux {m n : ℕ} (h₀ : m ∣ n) (h₁ : 2 ≤ m) (h₂ : m < n) : n / m ∣ n ∧ n / m < n := by
-  sorry
+  have hn : 0 < n := by
+    calc
+      0 ≤ 2 := by norm_num
+      _ ≤ m := h₁
+      _ < n := h₂
+  have hm : 1 < m := by
+    calc
+      1 < 2 := by norm_num
+      _ ≤ m := h₁
+  exact ⟨Nat.div_dvd_of_dvd h₀, Nat.div_lt_self hn hm⟩
 
 theorem exists_prime_factor_mod_4_eq_3 {n : Nat} (h : n % 4 = 3) :
     ∃ p : Nat, p.Prime ∧ p ∣ n ∧ p % 4 = 3 := by
@@ -248,19 +266,32 @@ theorem exists_prime_factor_mod_4_eq_3 {n : Nat} (h : n % 4 = 3) :
   induction' n using Nat.strong_induction_on with n ih
   rw [Nat.prime_def_lt] at np
   push_neg  at np
+  -- let `m` be a non-trivial divisor of `n`
   rcases np (two_le_of_mod_4_eq_3 h) with ⟨m, mltn, mdvdn, mne1⟩
   have mge2 : 2 ≤ m := by
     apply two_le _ mne1
     intro mz
     rw [mz, zero_dvd_iff] at mdvdn
-    linarith
+    rw [mz, mdvdn] at mltn
+    contradiction
+    -- linarith
   have neq : m * (n / m) = n := Nat.mul_div_cancel' mdvdn
   have : m % 4 = 3 ∨ n / m % 4 = 3 := by
     apply mod_4_eq_3_or_mod_4_eq_3
     rw [neq, h]
   rcases this with h1 | h1
-  . sorry
-  . sorry
+  · by_cases npm : m.Prime
+    · use m
+    · rcases ih m mltn h1 npm with ⟨m', prime_m', m'dvdm, m'3mod4⟩
+      use m'
+      exact ⟨prime_m', Nat.dvd_trans m'dvdm mdvdn, m'3mod4⟩
+  -- basically the same proof steps, but for `(n / m)` as the intermediate number instead of `m`
+  · let ⟨ hnmdn, hnmltn ⟩ := aux mdvdn mge2 mltn
+    by_cases prime_nm : (n / m).Prime
+    · use n / m
+    rcases ih (n / m) hnmltn h1 prime_nm with ⟨nm', prime_nm', nm'dvdn, nm'3mod4⟩
+    use nm'
+    exact ⟨prime_nm', Nat.dvd_trans nm'dvdn hnmdn, nm'3mod4⟩
 example (m n : ℕ) (s : Finset ℕ) (h : m ∈ erase s n) : m ≠ n ∧ m ∈ s := by
   rwa [mem_erase] at h
 
