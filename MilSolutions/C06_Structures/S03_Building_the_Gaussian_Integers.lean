@@ -1,6 +1,6 @@
 import Mathlib.Algebra.EuclideanDomain.Basic
 import Mathlib.RingTheory.PrincipalIdealDomain
-import MIL.Common
+import MilSolutions.Common
 
 @[ext]
 structure GaussInt where
@@ -97,7 +97,7 @@ instance instCommRing : CommRing GaussInt where
   add_zero := by
     intro
     ext <;> simp
-  add_left_neg := by
+  neg_add_cancel := by
     intro
     ext <;> simp
   add_comm := by
@@ -246,7 +246,7 @@ theorem coe_natAbs_norm (x : GaussInt) : (x.norm.natAbs : ℤ) = x.norm :=
 theorem natAbs_norm_mod_lt (x y : GaussInt) (hy : y ≠ 0) :
     (x % y).norm.natAbs < y.norm.natAbs := by
   apply Int.ofNat_lt.1
-  simp only [Int.coe_natAbs, abs_of_nonneg, norm_nonneg]
+  simp only [Int.natCast_natAbs, abs_of_nonneg, norm_nonneg]
   apply norm_mod_lt x hy
 
 theorem not_norm_mul_left_lt_norm (x : GaussInt) {y : GaussInt} (hy : y ≠ 0) :
@@ -263,9 +263,18 @@ instance : EuclideanDomain GaussInt :=
     quotient := (· / ·)
     remainder := (· % ·)
     quotient_mul_add_remainder_eq :=
-      fun x y ↦ by simp only; rw [mod_def, add_comm] ; ring
+      fun x y ↦ by
+        simp only
+        rw [mod_def, add_comm]
+        ring
     quotient_zero := fun x ↦ by
-      simp [div_def, norm, Int.div']
+      simp only [div_def, norm, Int.div']
+      rw [zero_re, zero_im]
+      -- TODO: fix this seemingly unneccessary simplification. The orig was
+      -- simply `rfl`
+      simp only [mul_re, conj_re, zero_re, mul_zero, conj_im, zero_im, neg_zero, sub_self, ne_eq,
+        OfNat.ofNat_ne_zero, not_false_eq_true, zero_pow, add_zero, EuclideanDomain.zero_div,
+        EuclideanDomain.div_zero, mul_im]
       rfl
     r := (measure (Int.natAbs ∘ norm)).1
     r_wellFounded := (measure (Int.natAbs ∘ norm)).2
@@ -273,6 +282,6 @@ instance : EuclideanDomain GaussInt :=
     mul_left_not_lt := not_norm_mul_left_lt_norm }
 
 example (x : GaussInt) : Irreducible x ↔ Prime x :=
-  PrincipalIdealRing.irreducible_iff_prime
+  irreducible_iff_prime
 
 end GaussInt
