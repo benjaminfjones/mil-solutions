@@ -1,4 +1,4 @@
-import MIL.Common
+import MilSolutions.Common
 import Mathlib.Algebra.BigOperators.Ring
 import Mathlib.Data.Real.Basic
 
@@ -81,14 +81,20 @@ theorem addAlt_comm (a b : Point) : addAlt a b = addAlt b a := by
   repeat' apply add_comm
 
 protected theorem add_assoc (a b c : Point) : (a.add b).add c = a.add (b.add c) := by
-  sorry
+  repeat' rw [add]
+  ext <;> dsimp
+  repeat' rw [add_assoc]
 
 def smul (r : ℝ) (a : Point) : Point :=
-  sorry
+  Point.mk (r * a.x) (r * a.y) (r * a.z)
 
 theorem smul_distrib (r : ℝ) (a b : Point) :
     (smul r a).add (smul r b) = smul r (a.add b) := by
-  sorry
+  -- repeat' rw [add]
+  -- repeat' rw [smul]
+  simp only [add, smul]
+  ext <;> dsimp
+  repeat' rw [mul_add]
 
 end Point
 
@@ -125,9 +131,28 @@ def midpoint (a b : StandardTwoSimplex) : StandardTwoSimplex
   z_nonneg := div_nonneg (add_nonneg a.z_nonneg b.z_nonneg) (by norm_num)
   sum_eq := by field_simp; linarith [a.sum_eq, b.sum_eq]
 
-def weightedAverage (lambda : Real) (lambda_nonneg : 0 ≤ lambda) (lambda_le : lambda ≤ 1)
-    (a b : StandardTwoSimplex) : StandardTwoSimplex :=
-  sorry
+theorem interpolate_nonneg {a b lam: ℝ} (ha: 0 ≤ a) (hb: 0 ≤ b)
+    (lam_nonneg : 0 ≤ lam) (lam_le : lam ≤ 1) : 0 ≤ lam * a + (1 - lam) * b := by
+  have : 0 ≤ 1 - lam := sub_nonneg.mpr lam_le
+  apply add_nonneg
+  · apply mul_nonneg lam_nonneg ha
+  · apply mul_nonneg this hb
+
+def weightedAverage (lam : Real) (lam_nonneg : 0 ≤ lam) (lam_le : lam ≤ 1)
+    (a b : StandardTwoSimplex) : StandardTwoSimplex where
+  x := lam * a.x + (1 - lam) * b.x
+  y := lam * a.y + (1 - lam) * b.y
+  z := lam * a.z + (1 - lam) * b.z
+  x_nonneg := interpolate_nonneg a.x_nonneg b.x_nonneg lam_nonneg lam_le
+  y_nonneg := interpolate_nonneg a.y_nonneg b.y_nonneg lam_nonneg lam_le
+  z_nonneg := interpolate_nonneg a.z_nonneg b.z_nonneg lam_nonneg lam_le
+  sum_eq := by
+    calc
+      lam * a.x + (1 - lam) * b.x +
+      (lam * a.y + (1 - lam) * b.y) +
+      (lam * a.z + (1 - lam) * b.z) = lam * (a.x + a.y + a.z) + (1-lam)*(b.x + b.y + b.z) := by ring
+      _ = lam + (1 - lam) := by rw [a.sum_eq, b.sum_eq]; ring
+      _ = 1 := by simp only [add_sub_cancel]
 
 end
 
@@ -206,4 +231,3 @@ variable (s : StdSimplex)
 #check s.2
 
 end
-
