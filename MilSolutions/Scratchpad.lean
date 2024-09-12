@@ -46,3 +46,17 @@ theorem FermatRecurrence' {n : Nat} : ∏ i ∈ range (n+1), Fermat i = Fermat (
   sorry
 
 end Fermat
+
+namespace SumSyntax
+
+open BigOperators
+
+structure Vector (n: Nat) where
+  V : Fin n → ℝ
+
+-- sum0 isn't well-formed. The sum syntax requires a pattern (function) (bound_arg)
+-- def sum0 (n: Nat) (v: Vector n) : Real := ∑ i, (fun i => v.V i)
+def sum1 (n: Nat) (v: Vector n) : Real := ∑ i, v.V i
+def sum2 (n: Nat) (v: Vector n) : Real := Finset.sum Finset.univ (fun i => v.V i)
+
+end SumSyntax
