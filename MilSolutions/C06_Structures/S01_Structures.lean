@@ -107,6 +107,13 @@ structure StandardTwoSimplex where
   z_nonneg : 0 ≤ z
   sum_eq : x + y + z = 1
 
+theorem interpolate_nonneg {a b lam: ℝ} (ha: 0 ≤ a) (hb: 0 ≤ b)
+    (lam_nonneg : 0 ≤ lam) (lam_le : lam ≤ 1) : 0 ≤ lam * a + (1 - lam) * b := by
+  have : 0 ≤ 1 - lam := sub_nonneg.mpr lam_le
+  apply add_nonneg
+  · apply mul_nonneg lam_nonneg ha
+  · apply mul_nonneg this hb
+
 namespace StandardTwoSimplex
 
 def swapXy (a : StandardTwoSimplex) : StandardTwoSimplex
@@ -130,13 +137,6 @@ def midpoint (a b : StandardTwoSimplex) : StandardTwoSimplex
   y_nonneg := div_nonneg (add_nonneg a.y_nonneg b.y_nonneg) (by norm_num)
   z_nonneg := div_nonneg (add_nonneg a.z_nonneg b.z_nonneg) (by norm_num)
   sum_eq := by field_simp; linarith [a.sum_eq, b.sum_eq]
-
-theorem interpolate_nonneg {a b lam: ℝ} (ha: 0 ≤ a) (hb: 0 ≤ b)
-    (lam_nonneg : 0 ≤ lam) (lam_le : lam ≤ 1) : 0 ≤ lam * a + (1 - lam) * b := by
-  have : 0 ≤ 1 - lam := sub_nonneg.mpr lam_le
-  apply add_nonneg
-  · apply mul_nonneg lam_nonneg ha
-  · apply mul_nonneg this hb
 
 def weightedAverage (lam : Real) (lam_nonneg : 0 ≤ lam) (lam_le : lam ≤ 1)
     (a b : StandardTwoSimplex) : StandardTwoSimplex where
@@ -179,6 +179,19 @@ def midpoint (n : ℕ) (a b : StandardSimplex n) : StandardSimplex n
     simp [div_eq_mul_inv, ← Finset.sum_mul, Finset.sum_add_distrib,
       a.sum_eq_one, b.sum_eq_one]
     field_simp
+
+-- set_option diagnostics true
+def weightedAverage {n : Nat} (lam : Real) (lam_nonneg : 0 ≤ lam) (lam_le : lam ≤ 1)
+    (a b : StandardSimplex n) : StandardSimplex n where
+  V i := lam * a.V i + (1 - lam) * b.V i
+  NonNeg := fun i => interpolate_nonneg (a.NonNeg i) (b.NonNeg i) lam_nonneg lam_le
+  sum_eq_one := by
+    calc (∑ i, (fun x => lam * a.V x + (1 - lam) * b.V x) i)
+      _ = (∑ i, (fun x => lam * a.V x) i) + (∑ i, (fun x => (1 - lam) * b.V x) i) := by apply Finset.sum_add_distrib
+      _ = lam * (∑ i, (fun x => a.V x) i) + (1 - lam) * (∑ i, (fun x => b.V x) i) := by repeat' rw [Finset.mul_sum]
+      _ = lam + (1 - lam) := by
+        rw [a.sum_eq_one, b.sum_eq_one, mul_one, mul_one]
+      _ = 1 := by ring
 
 end StandardSimplex
 
