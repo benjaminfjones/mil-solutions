@@ -3,6 +3,7 @@ import Mathlib.Data.Real.Basic
 
 namespace C06S02
 
+-- α is the carrier set
 structure Group₁ (α : Type*) where
   mul : α → α → α
   one : α
@@ -48,14 +49,20 @@ def permGroup {α : Type*} : Group₁ (Equiv.Perm α)
   mul f g := Equiv.trans g f
   one := Equiv.refl α
   inv := Equiv.symm
-  mul_assoc f g h := (Equiv.trans_assoc _ _ _).symm
+  mul_assoc _f _g _h := (Equiv.trans_assoc _ _ _).symm
   one_mul := Equiv.trans_refl
   mul_one := Equiv.refl_trans
   mul_left_inv := Equiv.self_trans_symm
 
 structure AddGroup₁ (α : Type*) where
-  (add : α → α → α)
-  -- fill in the rest
+  add : α → α → α
+  zero : α
+  neg : α → α
+  add_assoc : ∀ x y z : α, add (add x y) z = add x (add y z)
+  zero_add: ∀ x : α, add zero x = x
+  add_zero: ∀ x : α, add x zero = x
+  add_left_sub: ∀ x : α, add (neg x) x = zero
+
 @[ext]
 structure Point where
   x : ℝ
@@ -67,11 +74,31 @@ namespace Point
 def add (a b : Point) : Point :=
   ⟨a.x + b.x, a.y + b.y, a.z + b.z⟩
 
-def neg (a : Point) : Point := sorry
+def neg (a : Point) : Point := ⟨-a.x, -a.y, -a.z⟩
 
-def zero : Point := sorry
+def zero : Point := ⟨0, 0, 0⟩
 
-def addGroupPoint : AddGroup₁ Point := sorry
+def addGroupPoint : AddGroup₁ Point
+    where
+  add := add
+  zero := zero
+  neg := neg
+  add_assoc := by
+    intro x y z
+    simp only [add, mk.injEq]
+    constructor; rw [add_assoc]
+    constructor; rw [add_assoc]
+    rw [add_assoc]
+  zero_add := by
+    intro x
+    simp only [add, zero, zero_add]
+  add_zero := by
+    intro x
+    simp only [add, zero, add_zero]
+  add_left_sub := by
+    intro x
+    simp [neg, add, mk.injEq]
+    rfl
 
 end Point
 
@@ -84,7 +111,7 @@ variable {α : Type*} (f g : Equiv.Perm α) (n : ℕ)
 -- group power, defined for any group
 #check g ^ n
 
-example : f * g * g⁻¹ = f := by rw [mul_assoc, mul_right_inv, mul_one]
+example : f * g * g⁻¹ = f := by rw [mul_assoc, mul_inv_cancel, mul_one]
 
 example : f * g * g⁻¹ = f :=
   mul_inv_cancel_right f g
@@ -107,7 +134,7 @@ instance {α : Type*} : Group₂ (Equiv.Perm α) where
   mul f g := Equiv.trans g f
   one := Equiv.refl α
   inv := Equiv.symm
-  mul_assoc f g h := (Equiv.trans_assoc _ _ _).symm
+  mul_assoc _f _g _h := (Equiv.trans_assoc _ _ _).symm
   one_mul := Equiv.trans_refl
   mul_one := Equiv.refl_trans
   mul_left_inv := Equiv.self_trans_symm
