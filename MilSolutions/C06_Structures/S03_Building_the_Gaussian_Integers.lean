@@ -21,6 +21,7 @@ instance : Add GaussInt :=
 instance : Neg GaussInt :=
   ⟨fun x ↦ ⟨-x.re, -x.im⟩⟩
 
+-- (x.re + i * x.im) * (y.re + i * y.im)
 instance : Mul GaussInt :=
   ⟨fun x y ↦ ⟨x.re * y.re - x.im * y.im, x.re * y.im + x.im * y.re⟩⟩
 
@@ -80,6 +81,9 @@ theorem mul_re (x y : GaussInt) : (x * y).re = x.re * y.re - x.im * y.im :=
 theorem mul_im (x y : GaussInt) : (x * y).im = x.re * y.im + x.im * y.re :=
   rfl
 
+-- auto-expansion of the structure's fields can be done here using the lightbulb
+-- instance myInstCommRing : CommRing GuassInt := _
+
 instance instCommRing : CommRing GaussInt where
   zero := 0
   one := 1
@@ -136,6 +140,7 @@ theorem sub_re (x y : GaussInt) : (x - y).re = x.re - y.re :=
 theorem sub_im (x y : GaussInt) : (x - y).im = x.im - y.im :=
   rfl
 
+-- structures that have two distinct elements
 instance : Nontrivial GaussInt := by
   use 0, 1
   rw [Ne, GaussInt.ext_iff]
@@ -171,16 +176,65 @@ theorem abs_mod'_le (a b : ℤ) (h : 0 < b) : |mod' a b| ≤ b / 2 := by
   have := Int.emod_lt_of_pos (a + b / 2) h
   have := Int.ediv_add_emod b 2
   have := Int.emod_lt_of_pos b zero_lt_two
-  revert this; intro this -- FIXME, this should not be needed
   linarith
 
 theorem mod'_eq (a b : ℤ) : mod' a b = a - b * div' a b := by linarith [div'_add_mod' a b]
 
 end Int
 
+-- Lemmas:
+
+/- Addition is monotone in an ordered additive commutative group. -/
+-- add_le_add_left : ∀ a b : α, a ≤ b → ∀ c : α, c + a ≤ c + b
+
+/- In a strict ordered ring, `0 ≤ 1`. -/
+-- zero_le_one : 0 ≤ (1 : α)
+
+/- The product of two positive elements is positive. -/
+-- mul_pos : ∀ a b : α, 0 < a → 0 < b → 0 < a * b
+
+/- LinearOrder trichotemy -/
+-- x < y ∨ x = y ∨ y < x
+
+-- Sketch:
+-- by_contra gets us case 1: x != 0
+--   by sq_pos_iff -> 0 < x^2
+--   y^2 < x^2 + y^2 = 0
+--   y^2 < 0
+--   by sq_pos_iff and contradiction, y = 0
+-- etc...
 theorem sq_add_sq_eq_zero {α : Type*} [LinearOrderedRing α] (x y : α) :
     x ^ 2 + y ^ 2 = 0 ↔ x = 0 ∧ y = 0 := by
-  sorry
+  constructor
+  . intro h
+    by_contra dj
+    push_neg at dj
+    by_cases hxz : x = 0
+    · have : y ≠ 0 := dj hxz
+      rw [hxz, sq, zero_mul, zero_add] at h
+      exact this (sq_eq_zero_iff.mp h)
+
+    · -- case: x ≠ 0: use linear order to show that y = 0
+      have : 0 < x^2 := sq_pos_iff.mpr hxz
+      have y2lt : y^2 < 0 := by
+        calc y^2
+          _ = y^2 + 0 := by rw [add_zero]
+          _ < y^2 + x^2 := by apply add_lt_add_left this (y^2)
+          _ = 0 := by rw [add_comm]; exact h
+
+      -- y^2 < 0 → y = 0 is probably a lemma
+      have : y = 0 := by
+        by_contra hz
+        have : 0 < y^2 := sq_pos_iff.mpr hz
+        have : y^2 < y^2 := y2lt.trans this
+        exact (lt_self_iff_false (y^2)).mp this
+
+      rw [this] at y2lt
+      rw [sq, zero_mul] at y2lt
+      exact (lt_self_iff_false 0).mp y2lt
+  · rintro ⟨xz, yz⟩
+    rw [xz, yz, sq, zero_mul, zero_add]
+
 namespace GaussInt
 
 def norm (x : GaussInt) :=
