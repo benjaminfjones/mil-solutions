@@ -13,6 +13,19 @@ structure Group₁ (α : Type*) where
   one_mul : ∀ x : α, mul one x = x
   mul_left_inv : ∀ x : α, mul (inv x) x = one
 
+/-
+Mathlib version:
+----------------
+class Group.{u} : Type u → Type u
+number of parameters: 1
+constructor:
+Group.mk : {G : Type u} → [toDivInvMonoid : DivInvMonoid G] → (∀ (a : G), a⁻¹ * a = 1) → Group G
+fields:
+toDivInvMonoid : DivInvMonoid G
+inv_mul_cancel : ∀ (a : G), a⁻¹ * a = 1
+-/
+#print Group
+
 structure Group₁Cat where
   α : Type*
   str : Group₁ α
@@ -26,6 +39,8 @@ variable (f : α ≃ β) (g : β ≃ γ)
 #check (f.invFun : β → α)
 #check (f.right_inv : ∀ x : β, f (f.invFun x) = x)
 #check (f.left_inv : ∀ x : α, f.invFun (f x) = x)
+/- explicit evidence that the property of being in bijective correspondence is an
+   equivalence relation -/
 #check (Equiv.refl α : α ≃ α)
 #check (f.symm : β ≃ α)
 #check (f.trans g : α ≃ γ)
@@ -105,6 +120,7 @@ end Point
 section
 variable {α : Type*} (f g : Equiv.Perm α) (n : ℕ)
 
+-- product of two permutations of α
 #check f * g
 #check mul_assoc f g g⁻¹
 
@@ -197,4 +213,41 @@ end
 
 class AddGroup₂ (α : Type*) where
   add : α → α → α
-  -- fill in the rest
+  zero : α
+  neg : α → α
+  add_assoc : ∀ x y z : α, add (add x y) z = add x (add y z)
+  add_zero : ∀ x : α, add x zero = x
+  zero_add : ∀ x : α, add zero x = x
+  add_left_neg : ∀ x : α, add (neg x) x = zero
+
+open Point
+
+instance addGroup₂Point : AddGroup₂ Point
+    where
+  add := add
+  zero := zero
+  neg := neg
+  add_assoc := by
+    intro x y z
+    simp only [add, mk.injEq]
+    constructor; rw [add_assoc]
+    constructor; rw [add_assoc]
+    rw [add_assoc]
+  zero_add := by
+    intro x
+    simp only [add, zero, zero_add]
+  add_zero := by
+    intro x
+    simp only [add, zero, add_zero]
+  add_left_neg := by
+    intro x
+    simp [neg, add, mk.injEq]
+    rfl
+
+instance addPoint : Add Point where add := addGroup₂Point.add
+instance negPoint : Neg Point where neg := addGroup₂Point.neg
+instance zeroPoint : Zero Point where zero := addGroup₂Point.zero
+
+variable (p q : Point)
+example : p + q = addGroup₂Point.add p q := by rfl
+example : -p = addGroup₂Point.neg p := by rfl
