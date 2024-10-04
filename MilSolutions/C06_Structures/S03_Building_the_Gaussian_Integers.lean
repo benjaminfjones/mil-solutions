@@ -242,9 +242,21 @@ def norm (x : GaussInt) :=
 
 @[simp]
 theorem norm_nonneg (x : GaussInt) : 0 ≤ norm x := by
-  sorry
+  rw [norm]
+  linarith [sq_nonneg x.re, sq_nonneg x.im]
+
 theorem norm_eq_zero (x : GaussInt) : norm x = 0 ↔ x = 0 := by
-  sorry
+  rw [norm]
+  constructor
+  · intro h
+    let ⟨ hre, him ⟩ := (sq_add_sq_eq_zero x.re x.im).mp h
+    apply x.ext <;> assumption
+  · intro h
+    apply (sq_add_sq_eq_zero x.re x.im).mpr
+    have : (x.ext_iff).mp h
+    ·
+
+
 theorem norm_pos (x : GaussInt) : 0 < norm x ↔ x ≠ 0 := by
   sorry
 theorem norm_mul (x y : GaussInt) : norm (x * y) = norm x * norm y := by
