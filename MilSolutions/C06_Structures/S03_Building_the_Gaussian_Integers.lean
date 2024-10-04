@@ -251,16 +251,46 @@ theorem norm_eq_zero (x : GaussInt) : norm x = 0 ↔ x = 0 := by
   · intro h
     let ⟨ hre, him ⟩ := (sq_add_sq_eq_zero x.re x.im).mp h
     apply x.ext <;> assumption
-  · intro h
-    apply (sq_add_sq_eq_zero x.re x.im).mpr
-    have : (x.ext_iff).mp h
-    ·
-
+  intro h
+  apply (sq_add_sq_eq_zero x.re x.im).mpr
+  constructor
+  · convert zero_re
+  convert zero_im
 
 theorem norm_pos (x : GaussInt) : 0 < norm x ↔ x ≠ 0 := by
-  sorry
+  constructor
+  · intro h
+    by_contra ch
+    rw [norm] at h
+    have xr : x.re = 0 := by rw [ch]; apply zero_re
+    have xi : x.im = 0 := by rw [ch]; apply zero_im
+    rw [xr, xi] at h
+    contradiction
+
+  intro (h : x ≠ 0)
+  show 0 < norm x
+  rw [norm]
+  by_cases hr : x.re ≠ 0
+  · have hr : 0 < x.re^2 := sq_pos_iff.mpr hr
+    have hi : 0 ≤ x.im^2 := sq_nonneg x.im
+    exact Int.add_pos_of_pos_of_nonneg hr hi
+  have hr : x.re = 0 := by tauto
+  rw [hr, zero_pow (by norm_num), zero_add]
+
+  suffices hi : x.im ≠ 0
+  · exact (sq_pos_iff.mpr hi)
+  intro hi
+  have : x = 0 := by
+    apply x.ext
+    · rw [hr, zero_re]
+    · rw [hi, zero_im]
+  exact h this
+
 theorem norm_mul (x y : GaussInt) : norm (x * y) = norm x * norm y := by
-  sorry
+  rw [mul_def, norm, norm, norm]
+  simp only
+  ring
+
 def conj (x : GaussInt) : GaussInt :=
   ⟨x.re, -x.im⟩
 
