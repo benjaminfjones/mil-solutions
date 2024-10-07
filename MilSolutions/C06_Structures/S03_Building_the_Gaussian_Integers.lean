@@ -323,19 +323,23 @@ theorem norm_mod_lt (x : GaussInt) {y : GaussInt} (hy : y ≠ 0) :
   have H1 : x % y * conj y = ⟨Int.mod' (x * conj y).re (norm y), Int.mod' (x * conj y).im (norm y)⟩
   · ext <;> simp [Int.mod'_eq, mod_def, div_def, norm] <;> ring
   have H2 : norm (x % y) * norm y ≤ norm y / 2 * norm y
+  -- TIL have proofs can be dispatched as sub-goals
+  -- have H3 : 0 = 0
+  -- . norm_num
   · calc
       norm (x % y) * norm y = norm (x % y * conj y) := by simp only [norm_mul, norm_conj]
       _ = |Int.mod' (x.re * y.re + x.im * y.im) (norm y)| ^ 2
           + |Int.mod' (-(x.re * y.im) + x.im * y.re) (norm y)| ^ 2 := by simp [H1, norm, sq_abs]
-      _ ≤ (y.norm / 2) ^ 2 + (y.norm / 2) ^ 2 := by gcongr <;> apply Int.abs_mod'_le _ _ norm_y_pos
+      _ ≤ (y.norm / 2) ^ 2 + (y.norm / 2) ^ 2 := by gcongr <;> apply Int.abs_mod'_le _ _ norm_y_pos  -- essential fact about range of `mod'`
       _ = norm y / 2 * (norm y / 2 * 2) := by ring
-      _ ≤ norm y / 2 * norm y := by gcongr; apply Int.ediv_mul_le; norm_num
+      _ ≤ norm y / 2 * norm y := by gcongr; apply Int.ediv_mul_le; norm_num  -- gap b/w `div'` and *
   calc norm (x % y) ≤ norm y / 2 := le_of_mul_le_mul_right H2 norm_y_pos
     _ < norm y := by
         apply Int.ediv_lt_of_lt_mul
         · norm_num
         · linarith
 
+-- natAbs : ℤ → ℕ := fun x => abs x
 theorem coe_natAbs_norm (x : GaussInt) : (x.norm.natAbs : ℤ) = x.norm :=
   Int.natAbs_of_nonneg (norm_nonneg _)
 
