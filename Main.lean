@@ -24,6 +24,10 @@ import MilSolutions.C05_Elementary_Number_Theory.S03_Infinitely_Many_Primes
 import MilSolutions.C06_Structures.S01_Structures
 import MilSolutions.C06_Structures.S02_Algebraic_Structures
 import MilSolutions.C06_Structures.S03_Building_the_Gaussian_Integers
+-- C07
+import MilSolutions.C07_Hierarchies.S01_Basics
+import MilSolutions.C07_Hierarchies.S02_Morphisms
+import MilSolutions.C07_Hierarchies.S03_Subobjects
 
 def main : IO Unit :=
   IO.println s!"Hello, {hello}!"
