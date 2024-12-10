@@ -146,12 +146,13 @@ example {M : Type} [Monoid₁ M] {a b c : M} (hba : b ⋄ a = 𝟙) (hac : a ⋄
 
 
 lemma inv_eq_of_dia [Group₁ G] {a b : G} (h : a ⋄ b = 𝟙) : a⁻¹ = b :=
-  sorry
+  left_inv_eq_right_inv₁ (inv_dia a : a⁻¹ ⋄ a = 𝟙) h
 
-lemma dia_inv [Group₁ G] (a : G) : a ⋄ a⁻¹ = 𝟙 :=
-  sorry
-
-
+lemma dia_inv [Group₁ G] (a : G) : a ⋄ a⁻¹ = 𝟙 := by
+  have hai : (a⁻¹)⁻¹ ⋄ a⁻¹ = 𝟙 := inv_dia (a⁻¹)
+  have hia : a⁻¹ ⋄ a = 𝟙 := inv_dia a
+  have : (a⁻¹)⁻¹ = a := left_inv_eq_right_inv₁ hai hia
+  rwa [this] at hai
 
 
 class AddSemigroup₃ (α : Type) extends Add α where
