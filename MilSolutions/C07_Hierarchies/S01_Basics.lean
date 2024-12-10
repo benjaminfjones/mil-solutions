@@ -5,25 +5,32 @@ import Mathlib.Data.Real.Basic
 set_option autoImplicit true
 
 
+/-- Instances of this class have a special element denoted by `one`. There is
+    no other structure beyond that. -/
 class One₁ (α : Type) where
   /-- The element one -/
   one : α
 
 
+-- The instance parameter on `One₁.one` is implicit
 #check One₁.one -- One₁.one {α : Type} [self : One₁ α] : α
 
 @[class] structure One₂ (α : Type) where
   /-- The element one -/
   one : α
 
-#check One₂.one
+-- The instance parameter on `One₂.one` is explicit now
+#check One₂.one  -- One₂.one {α : Type} (self : One₂ α) : α
 
 
+-- resolve stuck metavariable inference with an initial type annotation
+-- note: [One₁.one] is silly here because it only matters when the delcaration
+--   is used and an example cannot be used.
 example (α : Type) [One₁ α] : α := One₁.one
-
+-- resolve stuck metavariable inference with a final type annotation
 example (α : Type) [One₁ α] := (One₁.one : α)
 
-@[inherit_doc]
+@[inherit_doc]  -- use docs of One₁.one for 𝟙 (slash b1)
 notation "𝟙" => One₁.one
 
 example {α : Type} [One₁ α] : α := 𝟙
@@ -31,6 +38,7 @@ example {α : Type} [One₁ α] : α := 𝟙
 example {α : Type} [One₁ α] : (𝟙 : α) = 𝟙 := rfl
 
 
+-- a binary operator "diamond"
 class Dia₁ (α : Type) where
   dia : α → α → α
 
@@ -38,17 +46,37 @@ infixl:70 " ⋄ "   => Dia₁.dia
 
 
 class Semigroup₁ (α : Type) where
+  -- `toDia₁` is in local context here, but the instance does not become part
+  -- of the type class database
   toDia₁ : Dia₁ α
   /-- Diamond is associative -/
   dia_assoc : ∀ a b c : α, a ⋄ b ⋄ c = a ⋄ (b ⋄ c)
 
 
+-- Add Dia₁ instance to Semigroup₁. This allows the following line to typecheck
 attribute [instance] Semigroup₁.toDia₁
 
 example {α : Type} [Semigroup₁ α] (a b : α) : α := a ⋄ b
 
+-- 𝟙    -- slash b1
+-- ⋄    -- slash diamond
+-- ◇    -- slash Diamond
+-- ◇    -- slash diw
+
+-- Some kind of rendering bug occurs here: https://github.com/leanprover/vscode-lean4/issues/555
+-- 𝟙 ⋄  -- slash b1 space slash diamond
+-- 1 ⋄  -- 1 space slash diamond
+-- ⋄ 𝟙
+-- ⋄ 1
+-- 𝟚 ⋄
+-- 2 ⋄
+-- 𝟙 1
+
 
 class Semigroup₂ (α : Type) extends Dia₁ α where
+  -- Note: Now, `toDia₁` is both in local context, and the instance becomes part
+  -- of the type class database!
+
   /-- Diamond is associative -/
   dia_assoc : ∀ a b c : α, a ⋄ b ⋄ c = a ⋄ (b ⋄ c)
 
@@ -81,6 +109,9 @@ example {α : Type} [Monoid₁ α] :
 /- Monoid₂.mk {α : Type} (toSemigroup₁ : Semigroup₁ α) (toDiaOneClass₁ : DiaOneClass₁ α) : Monoid₂ α -/
 #check Monoid₂.mk
 
+-- Note: `Monoid₁`, as an extension-only class has a constructor that includes only the
+--   "disjoint" parts of the classes it extends. A `toDiaOneClass₁` field is auto-generated
+--   to provide a symmetrical view to the user.
 /- Monoid₁.mk {α : Type} [toSemigroup₁ : Semigroup₁ α] [toOne₁ : One₁ α] (one_dia : ∀ (a : α), 𝟙 ⋄ a = a) (dia_one : ∀ (a : α), a ⋄ 𝟙 = a) : Monoid₁ α -/
 #check Monoid₁.mk
 
@@ -104,6 +135,7 @@ lemma left_inv_eq_right_inv₁ {M : Type} [Monoid₁ M] {a b c : M} (hba : b ⋄
   rw [← DiaOneClass₁.one_dia c, ← hba, Semigroup₁.dia_assoc, hac, DiaOneClass₁.dia_one b]
 
 
+-- Makes `one_dia` etc part of the root namespace
 export DiaOneClass₁ (one_dia dia_one)
 export Semigroup₁ (dia_assoc)
 export Group₁ (inv_dia)
