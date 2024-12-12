@@ -256,10 +256,37 @@ class Ring₃ (R : Type) extends AddGroup₃ R, Monoid₃ R, MulZeroClass R wher
   /-- Multiplication is right distributive over addition -/
   right_distrib : ∀ a b c : R, (a + b) * c = a * c + b * c
 
+-- Helper lemma for the next proof. Mathlib has `neg_eq_neg_one_mul` for
+-- types α with [MulOneClass α] [HasDistribNeg α]
+lemma neg_eq_neg_one_mul₃ {G : Type} [Ring₃ G] {a : G} : -a = -1 * a := by
+  have : a + -1 * a = 0 := by
+    calc
+      a + -1 * a = 1 * a + -1 * a := by simp only [one_mul]
+      _          = (1 + -1) * a := by rw [Ring₃.right_distrib]
+      _          = 0 * a := by simp only [AddGroup₃.add_neg, zero_mul]
+      _          = 0 := by simp only [zero_mul]
+  exact left_neg_eq_right_neg' (AddGroup₃.neg_add a) this
+
+-- Prove that we can produce an additive commutative group from Ring₃,
+-- which does not include an addition is commutative axiom. The key part is
+-- the above lemma and left distributing multiplication by -1.
 instance {R : Type} [Ring₃ R] : AddCommGroup₃ R :=
 { Ring₃.toAddGroup₃ with
   add_comm := by
-    sorry }
+    intro a b
+    have hz : -(a + b) + (b + a) = 0 := by
+      calc
+        -(a + b) + (b + a) = -1*(a + b) + (b + a) := by rw [neg_eq_neg_one_mul₃]
+        _ = (-1 * a + -1 * b) + (b + a) := by rw [Ring₃.left_distrib]
+        _ = (-a + -b) + (b + a) := by repeat rw [← neg_eq_neg_one_mul₃]
+        _ = -a + (-b + b) + a := by simp only [add_assoc₃]
+        _ = -a + 0 + a := by rw [AddGroup₃.neg_add _]
+        _ = -a + a := by rw [AddGroup₃.toAddMonoid₃.add_zero _]
+        _ = 0 := AddGroup₃.neg_add _
+    have hnab : -(a + b) + (a + b) = 0 := AddGroup₃.neg_add _
+    have hz' : -(a + b) + (b + a) = -(a + b) + (a + b) := hnab ▸ hz
+    exact (add_left_cancel₃ hz').symm
+    }
 
 instance : Ring₃ ℤ where
   add := (· + ·)
