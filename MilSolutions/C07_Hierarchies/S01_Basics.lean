@@ -159,6 +159,8 @@ class AddSemigroup₃ (α : Type) extends Add α where
 /-- Addition is associative -/
   add_assoc₃ : ∀ a b c : α, a + b + c = a + (b + c)
 
+-- tells the to_additive mechanism to use existing `AddSemigroup₃` for the
+-- additive version
 @[to_additive AddSemigroup₃]
 class Semigroup₃ (α : Type) extends Mul α where
 /-- Multiplication is associative -/
@@ -206,21 +208,40 @@ attribute [simp] Group₃.inv_mul AddGroup₃.neg_add
 
 
 @[to_additive]
-lemma inv_eq_of_mul [Group₃ G] {a b : G} (h : a * b = 1) : a⁻¹ = b :=
-  sorry
-
+lemma inv_eq_of_mul [Group₃ G] {a b : G} (h : a * b = 1) : a⁻¹ = b := by
+  apply left_inv_eq_right_inv'
+  exact Group₃.inv_mul a
+  assumption
 
 @[to_additive (attr := simp)]
 lemma Group₃.mul_inv {G : Type} [Group₃ G] {a : G} : a * a⁻¹ = 1 := by
-  sorry
+  -- same proof as `dia_inv`, replacing ⋄ with * and `inv_dia` with `inv_mul`
+  have hai : (a⁻¹)⁻¹ * a⁻¹ = 1 := inv_mul (a⁻¹)
+  have hia : a⁻¹ * a = 1 := inv_mul a
+  have : (a⁻¹)⁻¹ = a := left_inv_eq_right_inv' hai hia
+  rwa [this] at hai
 
 @[to_additive]
 lemma mul_left_cancel₃ {G : Type} [Group₃ G] {a b c : G} (h : a * b = a * c) : b = c := by
-  sorry
+  calc
+    b = 1 * b := by rw [one_mul b]
+    _ = (a⁻¹ * a) * b := by rw [Group₃.inv_mul a]    -- or simp
+    _ = a⁻¹ * (a * b) := by rw [mul_assoc₃ a⁻¹ a b]  -- simp makes no progress
+    _ = a⁻¹ * (a * c) := by rw [h]                   -- or simp [h]
+    _ = (a⁻¹ * a) * c := by rw [← mul_assoc₃ a⁻¹ a c]
+    _ = 1 * c := by rw [← Group₃.inv_mul a]
+    _ = c := by rw [one_mul c]
 
 @[to_additive]
 lemma mul_right_cancel₃ {G : Type} [Group₃ G] {a b c : G} (h : b*a = c*a) : b = c := by
-  sorry
+  calc
+    b = b * 1 := by rw [mul_one b]
+    _ = b * (a * a⁻¹) := by simp only [mul_one, Group₃.mul_inv]
+    _ = (b * a) * a⁻¹ := by simp [mul_assoc₃]
+    _ = (c * a) * a⁻¹ := by rw [h]
+    _ = c * (a * a⁻¹) := by simp [mul_assoc₃]
+    _ = c * 1 := by simp only [Group₃.mul_inv, mul_one]
+    _ = c := by simp only [mul_one]
 
 class AddCommGroup₃ (G : Type) extends AddGroup₃ G, AddCommMonoid₃ G
 
