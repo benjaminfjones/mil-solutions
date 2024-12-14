@@ -305,6 +305,14 @@ instance {R : Type} [Ring₃ R] : AddCommGroup₃ R :=
         _ = -a + 0 + a := by rw [AddGroup₃.neg_add _]
         _ = -a + a := by rw [AddGroup₃.toAddMonoid₃.add_zero _]
         _ = 0 := AddGroup₃.neg_add _
+    -- Note: aesop closes the goal at this point:
+    -- aesop?
+
+    -- rename_i inst
+    -- aesop_unfold
+    -- apply left_neg_eq_right_neg'
+    -- on_goal 2 => exact hz
+    -- simp_all only [AddGroup₃.add_neg]
     have hnab : -(a + b) + (a + b) = 0 := AddGroup₃.neg_add _
     have hz' : -(a + b) + (b + a) = -(a + b) + (a + b) := hnab ▸ hz
     exact (add_left_cancel₃ hz').symm
