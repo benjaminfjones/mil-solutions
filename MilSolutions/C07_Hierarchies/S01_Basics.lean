@@ -176,10 +176,11 @@ attribute [to_additive existing] Monoid₃.toMulOneClass
 export Semigroup₃ (mul_assoc₃)
 export AddSemigroup₃ (add_assoc₃)
 
-whatsnew in
+-- whatsnew in
 @[to_additive]
 lemma left_inv_eq_right_inv' {M : Type} [Monoid₃ M] {a b c : M} (hba : b * a = 1) (hac : a * c = 1) : b = c := by
   rw [← one_mul c, ← hba, mul_assoc₃, hac, mul_one b]
+attribute [aesop unsafe 10% apply] left_inv_eq_right_inv' left_neg_eq_right_neg'
 
 #check left_neg_eq_right_neg'
 
@@ -261,11 +262,32 @@ class Ring₃ (R : Type) extends AddGroup₃ R, Monoid₃ R, MulZeroClass R wher
 lemma neg_eq_neg_one_mul₃ {G : Type} [Ring₃ G] {a : G} : -a = -1 * a := by
   have : a + -1 * a = 0 := by
     calc
-      a + -1 * a = 1 * a + -1 * a := by simp only [one_mul]
+      a + -1 * a = 1 * a + -1 * a := by rw [one_mul]
       _          = (1 + -1) * a := by rw [Ring₃.right_distrib]
-      _          = 0 * a := by simp only [AddGroup₃.add_neg, zero_mul]
-      _          = 0 := by simp only [zero_mul]
+      _          = 0 * a := by rw [AddGroup₃.add_neg]
+      _          = 0 := by rw [zero_mul]
   exact left_neg_eq_right_neg' (AddGroup₃.neg_add a) this
+
+attribute [aesop norm] one_mul Ring₃.right_distrib AddGroup₃.add_neg
+attribute [aesop unsafe 50%] zero_mul Ring₃.right_distrib
+
+-- Same example `neg_eq_neg_one_mul` where most of the proof steps are found automatically by
+-- aesop. Most are just applications of simp_all only [...]
+set_option trace.aesop true
+example {G : Type} [Ring₃ G] {a : G} : -a = -1 * a := by
+  have : a + -1 * a = 0 := by
+    calc
+      a + -1 * a = 1 * a + -1 * a := by aesop
+      _          = (1 + -1) * a := by rw [Ring₃.right_distrib]  -- can't get aesop working here
+      _          = 0 * a := by aesop
+      _          = 0 := by aesop
+  aesop
+  -- Proof script:
+  -- apply left_neg_eq_right_neg'
+  -- on_goal 2 => {exact this
+  -- }
+  -- · simp_all only [AddGroup₃.neg_add]
+
 
 -- Prove that we can produce an additive commutative group from Ring₃,
 -- which does not include an addition is commutative axiom. The key part is
