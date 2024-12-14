@@ -342,13 +342,27 @@ class LE₁ (α : Type) where
 
 @[inherit_doc] infix:50 " ≤₁ " => LE₁.le
 
-class Preorder₁ (α : Type)
+-- Note: matching parameter convensions so Nat order instance fields apply directly
+class Preorder₁ (α : Type) extends LE₁ α where
+  le_refl (a : α): a ≤₁ a
+  le_trans {a b c : α} : a ≤₁ b → b ≤₁ c → a ≤₁ c
 
-class PartialOrder₁ (α : Type)
+class PartialOrder₁ (α : Type) extends Preorder₁ α where
+  le_antisymm {a b : α} (h1 : a ≤₁ b) (h2 : b ≤₁ a) : a = b
 
-class OrderedCommMonoid₁ (α : Type)
+class OrderedCommMonoid₁ (α : Type) extends AddCommMonoid α, PartialOrder₁ α where
+  le_of_mul_left (a b c : α) : a ≤₁ b → c + a ≤₁ c + b
 
+-- Note: Nat has an AddCommMonoid instance, but not CommMonoid in Mathlib
 instance : OrderedCommMonoid₁ ℕ where
+  le := Nat.le
+  le_refl := Nat.le_refl
+  le_trans := Nat.le_trans
+  le_antisymm := Nat.le_antisymm
+  le_of_mul_left a b c := by
+    intro h
+    apply Nat.add_le_add_left
+    assumption
 
 class SMul₃ (α : Type) (β : Type) where
   /-- Scalar multiplication -/
