@@ -370,7 +370,10 @@ class SMul₃ (α : Type) (β : Type) where
 
 infixr:73 " • " => SMul₃.smul
 
-
+-- **Important Note**: each data carrying type (w/ instances) on the left
+-- of the extends must appear on the right of extends. If not, typeclass
+-- search will try to find thee missing types and instances which are
+-- unconstrained on the right.
 class Module₁ (R : Type) [Ring₃ R] (M : Type) [AddCommGroup₃ M] extends SMul₃ R M where
   zero_smul : ∀ m : M, (0 : R) • m = 0
   one_smul : ∀ m : M, (1 : R) • m = m
