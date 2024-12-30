@@ -364,16 +364,25 @@ instance : OrderedCommMonoid₁ ℕ where
     apply Nat.add_le_add_left
     assumption
 
+
+/- Hierarchies with more than one data carrying class: Modules -/
+
 class SMul₃ (α : Type) (β : Type) where
   /-- Scalar multiplication -/
   smul : α → β → β
 
 infixr:73 " • " => SMul₃.smul
 
--- **Important Note**: each data carrying type (w/ instances) on the left
--- of the extends must appear on the right of extends. If not, typeclass
--- search will try to find thee missing types and instances which are
--- unconstrained on the right.
+
+/-- M is an R-module
+
+  **Note**: `AddCommGroup₃ M` can't be listed as an extension on the right. Doing so
+  leads Lean (through the `class` mechanism) to create a function `toAddCommGroup₃`
+  on `M` that has ring, ring instance, and module types on the left of it's signature.
+  However, the ring and ring instance are unconstrained on the right side, so finding
+  such an instance amounts to choosing an arbitrary one from the instance database; almost
+  surely not what we want. So the class mechanism forbids it.
+-/
 class Module₁ (R : Type) [Ring₃ R] (M : Type) [AddCommGroup₃ M] extends SMul₃ R M where
   zero_smul : ∀ m : M, (0 : R) • m = 0
   one_smul : ∀ m : M, (1 : R) • m = m
@@ -389,19 +398,123 @@ instance selfModule (R : Type) [Ring₃ R] : Module₁ R R where
   add_smul := Ring₃.right_distrib
   smul_add := Ring₃.left_distrib
 
+@[simp]
 def nsmul₁ [Zero M] [Add M] : ℕ → M → M
   | 0, _ => 0
   | n + 1, a => a + nsmul₁ n a
 
+@[simp]
+lemma nsmul₁_zero {M : Type} [AddCommGroup₃ M] : ∀ (a: ℕ), nsmul₁ a (0: M) = (0: M) := by
+  intro a
+  induction a with
+  | zero => unfold nsmul₁; rfl
+  | succ j ih =>
+    unfold nsmul₁
+    simp only [ih, zero_add]
+
+@[simp]
+lemma nsmul₁_one {M : Type} [AddCommGroup₃ M] (m: M) : nsmul₁ 1 m = m := by
+  simp only [nsmul₁, add_zero]
+
+example {M: Type} [AddCommGroup₃ M] (n: ℕ) : (0: M) = nsmul₁ n 0 := by
+  rw [nsmul₁_zero]
+
+@[simp]
+lemma add_nsmul₁ {M : Type} [AddCommGroup₃ M] :
+    ∀ (a b : ℕ) (m : M), nsmul₁ (a + b) m = nsmul₁ a m + nsmul₁ b m := by
+    intro a b m
+    induction a with
+    | zero => simp only [nsmul₁, zero_add, zero_add]
+    | succ j ih =>
+      simp only [nsmul₁]
+      calc
+        nsmul₁ (j + 1 + b) m = nsmul₁ (j + b + 1) m := by congr 1; omega
+        _                    = m + nsmul₁ (j + b) m := by simp only [nsmul₁]
+        _                    = m + nsmul₁ j m + nsmul₁ b m := by rw [ih, add_assoc₃]
+
+lemma nsmul₁_add {M : Type} [AddCommGroup₃ M] :
+    ∀ (a : ℕ) (m n: M), nsmul₁ a (m + n) = nsmul₁ a m + nsmul₁ a n := by
+  intro a m n
+  induction a with
+  | zero => simp only [nsmul₁, zero_add]
+  | succ b ih =>
+    simp only [add_nsmul₁, nsmul₁_one, ih]
+    -- ugh, cannot get this to work:
+    -- simp only [add_assoc₃, AddCommGroup₃.add_comm]
+    calc
+      nsmul₁ b m + nsmul₁ b n + (m + n) = nsmul₁ b m + (nsmul₁ b n + (m + n)) := by rw [add_assoc₃]
+      _                                 = nsmul₁ b m + ((nsmul₁ b n + m) + n) := by rw [add_assoc₃]
+      _                                 = nsmul₁ b m + ((m + nsmul₁ b n) + n) := by rw [AddCommGroup₃.add_comm m _]
+      _                                 = nsmul₁ b m + (m + (nsmul₁ b n + n)) := by rw [add_assoc₃]
+      _                                 = nsmul₁ b m + m + (nsmul₁ b n + n) := by rw [add_assoc₃]
+
+#print AddCommGroup₃.toAddGroup₃
+#print AddGroup₃
+
+lemma nsmul₁_neg {M : Type} [AddCommGroup₃ M] :
+    ∀ (a : ℕ) (m: M), nsmul₁ a (-m) = -nsmul₁ a m := by
+  intro a m
+  induction a with
+  | zero =>
+    simp only [nsmul₁]
+    calc
+      (0: M) = -0 + 0 := by rw [AddGroup₃.neg_add]
+      _ = -0 := by rw [add_zero]
+  | succ b ih =>
+    simp only [nsmul₁, nsmul₁_add, ih]
+    -- need -(c + d) = -c + -d
+    sorry
+
+@[simp]
+lemma mul_nsmul₁ {M : Type} [AddCommGroup₃ M] :
+    ∀ (a b : ℕ) (m : M), nsmul₁ (a * b) m = nsmul₁ a (nsmul₁ b m) := by
+    intro a b m
+    induction a with
+    | zero => simp only [nsmul₁, Nat.zero_mul]
+    | succ j ih =>
+      simp only [nsmul₁, Nat.add_mul, Nat.one_mul, add_nsmul₁, ih, add_comm]
+
+@[simp]
 def zsmul₁ {M : Type*} [Zero M] [Add M] [Neg M] : ℤ → M → M
   | Int.ofNat n, a => nsmul₁ n a
   | Int.negSucc n, a => -nsmul₁ n.succ a
 
+/-
+"Proving every AddCommGroup naturally has the structure of a ℤ-module is
+a bit tedious..."
+-/
 instance abGrpModule (A : Type) [AddCommGroup₃ A] : Module₁ ℤ A where
   smul := zsmul₁
-  zero_smul := sorry
-  one_smul := sorry
-  mul_smul := sorry
+  zero_smul := by intro m; simp only [zsmul₁, nsmul₁]
+    -- aesop  -- or aesop solves it
+  one_smul := by intro m; simp only [zsmul₁, nsmul₁, add_zero]
+  mul_smul := by
+    intro a b m
+    match a, b with
+    | .ofNat j, .ofNat k =>
+      -- TODO: don't know how to get simp to work with coe Nat -> Int
+      rw [Int.ofNat_eq_coe, Int.ofNat_eq_coe, Int.ofNat_mul_ofNat]
+      simp only [zsmul₁, Int.ofNat_mul, Int.ofNat_mul_ofNat, mul_nsmul₁]
+    | Int.ofNat j, Int.negSucc k =>
+      -- TODO: this case is very tedious
+      simp only [zsmul₁, Int.ofNat_eq_coe, Int.ofNat_mul_negSucc']
+      match j with
+      | 0 =>
+        rw [zero_mul]
+        simp only [Int.negOfNat_eq, Int.ofNat_eq_coe, Int.neg_ofNat_zero, nsmul₁]
+      | l + 1 =>
+        have : (l + 1) * k.succ = l * k.succ + k + 1 := by
+          rw [add_mul, Nat.succ_eq_add_one, one_mul]
+          omega
+        simp only [zsmul₁, Int.ofNat_eq_coe, Int.ofNat_mul_negSucc, Int.ofNat_mul,
+                   this, Int.negOfNat, nsmul₁_add, nsmul₁_neg]
+        congr 1
+        simp only [Nat.succ_eq_add_one, nsmul₁_one, nsmul₁_add, mul_nsmul₁, add_assoc₃, mul_add]
+        repeat rw [add_nsmul₁]
+        simp only [mul_one, nsmul₁_one, nsmul₁_add, mul_nsmul₁, add_assoc₃]
+    | Int.negSucc j, Int.ofNat k =>
+      sorry
+    | Int.negSucc j, Int.negSucc k => sorry
   add_smul := sorry
   smul_add := sorry
 
