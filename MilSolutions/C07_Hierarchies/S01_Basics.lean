@@ -448,8 +448,22 @@ lemma nsmul₁_add {M : Type} [AddCommGroup₃ M] :
       _                                 = nsmul₁ b m + (m + (nsmul₁ b n + n)) := by rw [add_assoc₃]
       _                                 = nsmul₁ b m + m + (nsmul₁ b n + n) := by rw [add_assoc₃]
 
-#print AddCommGroup₃.toAddGroup₃
-#print AddGroup₃
+namespace AddGroup₃
+lemma neg_of_add_eq_add_of_neg {M : Type} [AddCommGroup₃ M] :
+    ∀ (a b: M), -(a + b) = -a + -b := by
+  intro a b
+  have h : (a + b) + (-a + -b) = 0 := by
+    calc
+      (a + b) + (-a + -b) = (a + b + -a) + -b := by rw [← add_assoc₃]
+      _                   = (a + (b + -a)) + -b := by rw [← add_assoc₃]
+      _                   = (a + (-a + b)) + -b := by rw [AddCommGroup₃.add_comm b (-a)]
+      _                   = (a + -a + b) + -b := by rw [← add_assoc₃]
+      _                   = (a + -a) + (b + -b) := by rw [← add_assoc₃]
+      _                   = 0 := by
+                                   repeat rw [add_neg]
+                                   rw [zero_add]
+  exact neg_eq_of_add h
+end AddGroup₃
 
 lemma nsmul₁_neg {M : Type} [AddCommGroup₃ M] :
     ∀ (a : ℕ) (m: M), nsmul₁ a (-m) = -nsmul₁ a m := by
@@ -462,8 +476,7 @@ lemma nsmul₁_neg {M : Type} [AddCommGroup₃ M] :
       _ = -0 := by rw [add_zero]
   | succ b ih =>
     simp only [nsmul₁, nsmul₁_add, ih]
-    -- need -(c + d) = -c + -d
-    sorry
+    apply (AddGroup₃.neg_of_add_eq_add_of_neg m (nsmul₁ b m)).symm
 
 @[simp]
 lemma mul_nsmul₁ {M : Type} [AddCommGroup₃ M] :
