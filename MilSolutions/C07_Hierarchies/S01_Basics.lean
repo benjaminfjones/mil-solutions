@@ -214,6 +214,8 @@ lemma inv_eq_of_mul [Group₃ G] {a b : G} (h : a * b = 1) : a⁻¹ = b := by
   exact Group₃.inv_mul a
   assumption
 
+#check neg_eq_of_add
+
 @[to_additive (attr := simp)]
 lemma Group₃.mul_inv {G : Type} [Group₃ G] {a : G} : a * a⁻¹ = 1 := by
   -- same proof as `dia_inv`, replacing ⋄ with * and `inv_dia` with `inv_mul`
@@ -221,6 +223,8 @@ lemma Group₃.mul_inv {G : Type} [Group₃ G] {a : G} : a * a⁻¹ = 1 := by
   have hia : a⁻¹ * a = 1 := inv_mul a
   have : (a⁻¹)⁻¹ = a := left_inv_eq_right_inv' hai hia
   rwa [this] at hai
+
+#check AddGroup₃.add_neg
 
 @[to_additive]
 lemma mul_left_cancel₃ {G : Type} [Group₃ G] {a b c : G} (h : a * b = a * c) : b = c := by
@@ -448,9 +452,13 @@ lemma nsmul₁_add {M : Type} [AddCommGroup₃ M] :
       _                                 = nsmul₁ b m + (m + (nsmul₁ b n + n)) := by rw [add_assoc₃]
       _                                 = nsmul₁ b m + m + (nsmul₁ b n + n) := by rw [add_assoc₃]
 
-namespace AddGroup₃
-lemma neg_of_add_eq_add_of_neg {M : Type} [AddCommGroup₃ M] :
-    ∀ (a b: M), -(a + b) = -a + -b := by
+namespace AddCommGroup₃
+-- A bunch of lemmas we need to prove again because we're using AddCommGroup₃
+-- rather than the standard one
+
+variable {M: Type} [AddCommGroup₃ M]
+
+lemma neg_of_add_eq_add_of_neg : ∀ (a b: M), -(a + b) = -a + -b := by
   intro a b
   have h : (a + b) + (-a + -b) = 0 := by
     calc
@@ -460,10 +468,21 @@ lemma neg_of_add_eq_add_of_neg {M : Type} [AddCommGroup₃ M] :
       _                   = (a + -a + b) + -b := by rw [← add_assoc₃]
       _                   = (a + -a) + (b + -b) := by rw [← add_assoc₃]
       _                   = 0 := by
-                                   repeat rw [add_neg]
-                                   rw [zero_add]
+                                   rw [add_comm a _, add_comm b _,
+                                       AddGroup₃.neg_add, AddGroup₃.neg_add,
+                                       AddMonoid₃.zero_add]
   exact neg_eq_of_add h
-end AddGroup₃
+
+lemma neg_zero_eq_zero : -(0: M) = 0 := by
+  have : (0: M) + 0 = 0 := by rw [zero_add]
+  exact neg_eq_of_add this
+
+lemma double_neg : ∀ (m: M), - (-m) = m := by
+  intro m
+  have : -m + m = 0 := by rw [add_comm, AddGroup₃.add_neg]
+  exact neg_eq_of_add this
+
+end AddCommGroup₃
 
 lemma nsmul₁_neg {M : Type} [AddCommGroup₃ M] :
     ∀ (a : ℕ) (m: M), nsmul₁ a (-m) = -nsmul₁ a m := by
@@ -476,7 +495,7 @@ lemma nsmul₁_neg {M : Type} [AddCommGroup₃ M] :
       _ = -0 := by rw [add_zero]
   | succ b ih =>
     simp only [nsmul₁, nsmul₁_add, ih]
-    apply (AddGroup₃.neg_of_add_eq_add_of_neg m (nsmul₁ b m)).symm
+    apply (AddCommGroup₃.neg_of_add_eq_add_of_neg m (nsmul₁ b m)).symm
 
 @[simp]
 lemma mul_nsmul₁ {M : Type} [AddCommGroup₃ M] :
@@ -488,7 +507,7 @@ lemma mul_nsmul₁ {M : Type} [AddCommGroup₃ M] :
       simp only [nsmul₁, Nat.add_mul, Nat.one_mul, add_nsmul₁, ih, add_comm]
 
 @[simp]
-def zsmul₁ {M : Type*} [Zero M] [Add M] [Neg M] : ℤ → M → M
+def zsmul₁ {M : Type} [Zero M] [Add M] [Neg M] : ℤ → M → M
   | Int.ofNat n, a => nsmul₁ n a
   | Int.negSucc n, a => -nsmul₁ n.succ a
 
@@ -501,15 +520,18 @@ instance abGrpModule (A : Type) [AddCommGroup₃ A] : Module₁ ℤ A where
   zero_smul := by intro m; simp only [zsmul₁, nsmul₁]
     -- aesop  -- or aesop solves it
   one_smul := by intro m; simp only [zsmul₁, nsmul₁, add_zero]
+
+  -- woof!
   mul_smul := by
     intro a b m
     match a, b with
     | .ofNat j, .ofNat k =>
-      -- TODO: don't know how to get simp to work with coe Nat -> Int
+      -- TODO: don't know how to get simp to work alone with coe Nat -> Int
+      --   so we settle for a `rw`, `simp only` combo
       rw [Int.ofNat_eq_coe, Int.ofNat_eq_coe, Int.ofNat_mul_ofNat]
       simp only [zsmul₁, Int.ofNat_mul, Int.ofNat_mul_ofNat, mul_nsmul₁]
     | Int.ofNat j, Int.negSucc k =>
-      -- TODO: this case is very tedious
+      -- TODO: this case and the next are very tedious
       simp only [zsmul₁, Int.ofNat_eq_coe, Int.ofNat_mul_negSucc']
       match j with
       | 0 =>
@@ -526,8 +548,30 @@ instance abGrpModule (A : Type) [AddCommGroup₃ A] : Module₁ ℤ A where
         repeat rw [add_nsmul₁]
         simp only [mul_one, nsmul₁_one, nsmul₁_add, mul_nsmul₁, add_assoc₃]
     | Int.negSucc j, Int.ofNat k =>
-      sorry
-    | Int.negSucc j, Int.negSucc k => sorry
+      simp only [zsmul₁, Int.ofNat_eq_coe, Int.ofNat_mul_negSucc']
+      match k with
+      | 0 =>
+        simp only [nsmul₁, nsmul₁_zero, zero_add]
+        rw [Int.negSucc_mul_ofNat', mul_zero]
+        simp only [Int.negOfNat_eq, Int.ofNat_eq_coe, Int.neg_ofNat_zero, nsmul₁]
+        exact (AddCommGroup₃.neg_zero_eq_zero).symm
+      | l + 1 =>
+        rw [Int.negSucc_mul_ofNat']
+        have : j.succ * (l + 1) = j * l +j + l + 1 := by
+          rw [Nat.succ_eq_add_one, mul_add, add_mul, mul_one, one_mul]
+          omega
+        -- below here proof is same as previous outer case
+        simp only [zsmul₁, Int.ofNat_eq_coe, Int.ofNat_mul_negSucc, Int.ofNat_mul,
+                   this, Int.negOfNat, nsmul₁_add, nsmul₁_neg]
+        congr 1
+        simp only [Nat.succ_eq_add_one, nsmul₁_one, nsmul₁_add, mul_nsmul₁, add_assoc₃, mul_add]
+        repeat rw [add_nsmul₁]
+        simp only [mul_one, nsmul₁_one, nsmul₁_add, mul_nsmul₁, add_assoc₃]
+    | Int.negSucc j, Int.negSucc k =>
+      simp only [zsmul₁, Int.ofNat_eq_coe, Int.negSucc_mul_negSucc,
+                 Int.ofNat_mul_ofNat, mul_nsmul₁, nsmul₁_neg]
+      rw [AddCommGroup₃.double_neg]
+
   add_smul := sorry
   smul_add := sorry
 
