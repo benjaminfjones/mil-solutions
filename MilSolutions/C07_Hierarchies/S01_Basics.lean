@@ -1,3 +1,4 @@
+import Init.Data.Int.Basic
 import MilSolutions.Common
 import Mathlib.Algebra.BigOperators.Ring
 import Mathlib.Data.Real.Basic
@@ -506,10 +507,37 @@ lemma mul_nsmul₁ {M : Type} [AddCommGroup₃ M] :
     | succ j ih =>
       simp only [nsmul₁, Nat.add_mul, Nat.one_mul, add_nsmul₁, ih, add_comm]
 
+open Int
+
 @[simp]
 def zsmul₁ {M : Type} [Zero M] [Add M] [Neg M] : ℤ → M → M
   | Int.ofNat n, a => nsmul₁ n a
   | Int.negSucc n, a => -nsmul₁ n.succ a
+
+lemma add_zsmul₁ {M : Type} [AddCommGroup₃ M] :
+    ∀ (a b: ℤ) (m: M), zsmul₁ (a + b) m = zsmul₁ a m + zsmul₁ b m
+  | (m:Nat), (n:Nat), w => by
+    simp only [Int.ofNat_add_ofNat, zsmul₁, add_nsmul₁]
+  | (m:Nat), -[n+1],  w => by
+    -- yikes
+    rcases Int.le_or_lt (n+1) m with (h1|h2)
+    · simp only [zsmul₁, nsmul₁]
+      have : 0 ≤ m + -[n+1] := by exact (Lean.Omega.Int.add_nonnneg_iff_neg_le ↑m -[n+1]).mpr h1
+      let ⟨o, oh⟩ := Int.eq_ofNat_of_zero_le this
+      rw [oh]
+      simp only [zsmul₁, nsmul₁]
+      have : m = o + (n + 1) := by
+        have : n + 1 ≤ m := by omega
+        rw [← Nat.succ_eq_add_one] at this
+        rw [Int.ofNat_add_negSucc, subNatNat_of_le this] at oh
+        omega (config := { splitNatSub := true })
+      simp only [this, add_nsmul₁]
+      simp only [nsmul₁, add_zero, add_assoc₃, AddCommGroup₃.neg_of_add_eq_add_of_neg]
+      rw [← add_assoc₃ w (-w) _, AddGroup₃.add_neg, zero_add, AddGroup₃.add_neg, add_zero]
+    · sorry
+  | -[m+1],  (n:Nat), w => by sorry
+  | -[m+1],  -[n+1],  w => by sorry
+
 
 /-
 "Proving every AddCommGroup naturally has the structure of a ℤ-module is
