@@ -514,11 +514,19 @@ def zsmul₁ {M : Type} [Zero M] [Add M] [Neg M] : ℤ → M → M
   | Int.ofNat n, a => nsmul₁ n a
   | Int.negSucc n, a => -nsmul₁ n.succ a
 
-lemma add_zsmul₁ {M : Type} [AddCommGroup₃ M] :
-    ∀ (a b: ℤ) (m: M), zsmul₁ (a + b) m = zsmul₁ a m + zsmul₁ b m
-  | (m:Nat), (n:Nat), w => by
-    simp only [Int.ofNat_add_ofNat, zsmul₁, add_nsmul₁]
-  | (m:Nat), -[n+1],  w => by
+ /-
+ Helper lemma for `add_zsmul₁` that proves the following goal. This is factored out and used
+ in two different cases that only differ up to commutativity in ℕ and M.
+
+ M : Type
+ inst✝ : AddCommGroup₃ M
+ m n : ℕ
+ w : M
+ ⊢ zsmul₁ (↑m + -[n+1]) w = zsmul₁ (↑m) w + zsmul₁ -[n+1] w
+ -/
+lemma add_zsmul_asymm_helper {M : Type} [AddCommGroup₃ M] :
+    ∀ (m n: ℕ) (w: M), zsmul₁ (↑m + -[n+1]) w = zsmul₁ (↑m) w + zsmul₁ -[n+1] w := by
+    intro m n w
     -- The strategy with these cases is to rewrite the LHS argument to `zsmul₁`
     -- into canonical form, unfold its definition, and then simplify
     rcases Int.le_or_lt (n+1) m with (h1|h2)
@@ -564,11 +572,22 @@ lemma add_zsmul₁ {M : Type} [AddCommGroup₃ M] :
             rw [AddCommGroup₃.neg_of_add_eq_add_of_neg, add_assoc₃]
           _ =  -(w + nsmul₁ o w) := by rw [AddGroup₃.add_neg, zero_add]
       rw [this]
-  | -[m+1],  (n:Nat), w => by sorry
-  | -[m+1],  -[n+1],  w => by sorry
 
-#check Int.negSucc_add_ofNat
-#check Int.subNat
+lemma add_zsmul₁ {M : Type} [AddCommGroup₃ M] :
+    ∀ (a b: ℤ) (m: M), zsmul₁ (a + b) m = zsmul₁ a m + zsmul₁ b m
+  | (m:Nat), (n:Nat), w => by
+    simp only [Int.ofNat_add_ofNat, zsmul₁, add_nsmul₁]
+  | (m:Nat), -[n+1],  w => by apply add_zsmul_asymm_helper
+  | -[m+1],  (n:Nat), w => by
+    rw [Int.add_comm, AddCommGroup₃.add_comm (zsmul₁ -[m+1] w) _]
+    apply add_zsmul_asymm_helper
+  | -[m+1],  -[n+1],  w => by
+    rw [Int.negSucc_add_negSucc]
+    simp only [zsmul₁, nsmul₁, add_nsmul₁]
+    repeat rw [AddCommGroup₃.neg_of_add_eq_add_of_neg]
+    rw [ add_assoc₃, ← add_assoc₃ (-nsmul₁ m w) _, AddCommGroup₃.add_comm (-nsmul₁ m w) (-w),
+        add_assoc₃]
+
 /-
 "Proving every AddCommGroup naturally has the structure of a ℤ-module is
 a bit tedious..."
@@ -630,7 +649,7 @@ instance abGrpModule (A : Type) [AddCommGroup₃ A] : Module₁ ℤ A where
                  Int.ofNat_mul_ofNat, mul_nsmul₁, nsmul₁_neg]
       rw [AddCommGroup₃.double_neg]
 
-  add_smul := sorry
+  add_smul := add_zsmul₁
   smul_add := sorry
 
 #synth Module₁ ℤ ℤ -- abGrpModule ℤ
