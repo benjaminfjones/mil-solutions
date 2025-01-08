@@ -519,26 +519,56 @@ lemma add_zsmul₁ {M : Type} [AddCommGroup₃ M] :
   | (m:Nat), (n:Nat), w => by
     simp only [Int.ofNat_add_ofNat, zsmul₁, add_nsmul₁]
   | (m:Nat), -[n+1],  w => by
-    -- yikes
+    -- The strategy with these cases is to rewrite the LHS argument to `zsmul₁`
+    -- into canonical form, unfold its definition, and then simplify
     rcases Int.le_or_lt (n+1) m with (h1|h2)
-    · simp only [zsmul₁, nsmul₁]
-      have : 0 ≤ m + -[n+1] := by exact (Lean.Omega.Int.add_nonnneg_iff_neg_le ↑m -[n+1]).mpr h1
-      let ⟨o, oh⟩ := Int.eq_ofNat_of_zero_le this
+    · have hmn : 0 ≤ m + -[n+1] := by exact (Lean.Omega.Int.add_nonnneg_iff_neg_le ↑m -[n+1]).mpr h1
+      let ⟨o, oh⟩ := Int.eq_ofNat_of_zero_le hmn
       rw [oh]
-      simp only [zsmul₁, nsmul₁]
-      have : m = o + (n + 1) := by
-        have : n + 1 ≤ m := by omega
-        rw [← Nat.succ_eq_add_one] at this
-        rw [Int.ofNat_add_negSucc, subNatNat_of_le this] at oh
+      have hmon : m = o + (n + 1) := by
+        have _hnm : n + 1 ≤ m := by omega
+        rw [← Nat.succ_eq_add_one] at _hnm
+        rw [Int.ofNat_add_negSucc, subNatNat_of_le _hnm] at oh
         omega (config := { splitNatSub := true })
-      simp only [this, add_nsmul₁]
+      -- at this point we have arguments in canoncial form
+      simp only [zsmul₁, nsmul₁]  -- using `simp only` in 3 different phases is needed here
+      simp only [hmon, add_nsmul₁]
       simp only [nsmul₁, add_zero, add_assoc₃, AddCommGroup₃.neg_of_add_eq_add_of_neg]
       rw [← add_assoc₃ w (-w) _, AddGroup₃.add_neg, zero_add, AddGroup₃.add_neg, add_zero]
-    · sorry
+    · have : m + -[n+1] < 0 := by exact (Int.add_lt_iff ↑m -[n+1] 0).mpr h2
+      let ⟨o, oh⟩ := Int.eq_negSucc_of_lt_zero this
+      rw [oh]
+      -- oh : ↑m + -[n+1] = -[o+1]
+      -- ⊢ m + o = n
+      have hmon : (m: Int) + o = n := by
+        calc
+          m + o = (m + -[n+1]) + o - -[n+1] := by simp [add_assoc₃, add_comm]
+          _     = -[o+1] + o - -[n+1] := by rw [oh]
+          _     = Int.subNatNat o o.succ - -[n+1] := by rw [Int.negSucc_add_ofNat _ _]
+          _     = -[0+1] - -[n+1] := by rw [fun n => @Int.subNatNat_add_right n 0]
+          _     = -(1: Nat) - -[n+1] := by rw [← Int.neg_ofNat_succ, Nat.succ_eq_add_one, Nat.zero_add]
+          _     = n := by
+            rw [Int.sub_eq_add_neg, Int.neg_negSucc]
+            simp only [Nat.cast_one, reduceNeg, Nat.succ_eq_add_one, Nat.cast_add,
+              neg_add_cancel_comm_assoc]
+      simp only [zsmul₁, nsmul₁]
+      rw [Int.ofNat_add_ofNat, Int.ofNat_inj] at hmon  -- now we have (m: Nat) + o = n
+      rw [← hmon, add_nsmul₁]
+      have : nsmul₁ m w + -(w + (nsmul₁ m w + nsmul₁ o w)) = -(w + nsmul₁ o w) := by
+        calc
+          nsmul₁ m w + -(w + (nsmul₁ m w + nsmul₁ o w)) = nsmul₁ m w + -(nsmul₁ m w + (w + nsmul₁ o w)) := by
+            rw [← add_assoc₃]
+            rw [AddCommGroup₃.add_comm w _]
+            rw [add_assoc₃]
+          _                                             = nsmul₁ m w + -(nsmul₁ m w) + -(w + nsmul₁ o w) := by
+            rw [AddCommGroup₃.neg_of_add_eq_add_of_neg, add_assoc₃]
+          _ =  -(w + nsmul₁ o w) := by rw [AddGroup₃.add_neg, zero_add]
+      rw [this]
   | -[m+1],  (n:Nat), w => by sorry
   | -[m+1],  -[n+1],  w => by sorry
 
-
+#check Int.negSucc_add_ofNat
+#check Int.subNat
 /-
 "Proving every AddCommGroup naturally has the structure of a ℤ-module is
 a bit tedious..."
