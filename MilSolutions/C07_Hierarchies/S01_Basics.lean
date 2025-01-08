@@ -594,10 +594,13 @@ a bit tedious..."
 -/
 instance abGrpModule (A : Type) [AddCommGroup₃ A] : Module₁ ℤ A where
   smul := zsmul₁
+  -- zero_smul : ∀ m : M, (0 : R) • m = 0
   zero_smul := by intro m; simp only [zsmul₁, nsmul₁]
     -- aesop  -- or aesop solves it
+  -- one_smul : ∀ m : M, (1 : R) • m = m
   one_smul := by intro m; simp only [zsmul₁, nsmul₁, add_zero]
 
+  -- mul_smul : ∀ (a b : R) (m : M), (a * b) • m = a • b • m
   -- woof!
   mul_smul := by
     intro a b m
@@ -649,8 +652,24 @@ instance abGrpModule (A : Type) [AddCommGroup₃ A] : Module₁ ℤ A where
                  Int.ofNat_mul_ofNat, mul_nsmul₁, nsmul₁_neg]
       rw [AddCommGroup₃.double_neg]
 
+  -- add_smul : ∀ (a b : R) (m : M), (a + b) • m = a • m + b • m
   add_smul := add_zsmul₁
-  smul_add := sorry
+
+  -- smul_add : ∀ (a : R) (m n : M), a • (m + n) = a • m + a • n
+  -- easy by comparison!
+  smul_add := by
+    intro a m n
+    match a with
+    | .ofNat j => simp only [zsmul₁, nsmul₁, nsmul₁_add]
+    | .negSucc j =>
+      simp only [zsmul₁, nsmul₁, nsmul₁_add]
+      repeat rw [AddCommGroup₃.neg_of_add_eq_add_of_neg]
+      -- ideally this would by handled by simp in M
+      rw [← add_assoc₃ (-m + -nsmul₁ j m) _,
+          add_assoc₃ (-m) (-nsmul₁ j m),
+          AddCommGroup₃.add_comm (-nsmul₁ j m) (-n),
+          ← add_assoc₃ (-m) (-n), ← add_assoc₃]
+
 
 #synth Module₁ ℤ ℤ -- abGrpModule ℤ
 
