@@ -591,6 +591,8 @@ lemma add_zsmul₁ {M : Type} [AddCommGroup₃ M] :
 /-
 "Proving every AddCommGroup naturally has the structure of a ℤ-module is
 a bit tedious..."
+
+Current length: ~266 LOC
 -/
 instance abGrpModule (A : Type) [AddCommGroup₃ A] : Module₁ ℤ A where
   smul := zsmul₁
