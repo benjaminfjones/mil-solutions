@@ -160,6 +160,13 @@ class AddSemigroup₃ (α : Type) extends Add α where
 /-- Addition is associative -/
   add_assoc₃ : ∀ a b c : α, a + b + c = a + (b + c)
 
+
+universe u
+variable {β : Type} [AddSemigroup₃ β]
+
+instance add_semigroup₃_associative : Std.Associative (α := β) (· + ·) where
+  assoc := AddSemigroup₃.add_assoc₃
+
 -- tells the to_additive mechanism to use existing `AddSemigroup₃` for the
 -- additive version
 @[to_additive AddSemigroup₃]
@@ -187,6 +194,10 @@ attribute [aesop unsafe 10% apply] left_inv_eq_right_inv' left_neg_eq_right_neg'
 
 class AddCommSemigroup₃ (α : Type) extends AddSemigroup₃ α where
   add_comm : ∀ a b : α, a + b = b + a
+
+variable {γ : Type} [AddCommSemigroup₃ γ]
+instance add_comm_semigroup₃_commutative : Std.Commutative (α := γ) (· + ·) where
+  comm := AddCommSemigroup₃.add_comm
 
 @[to_additive AddCommSemigroup₃]
 class CommSemigroup₃ (α : Type) extends Semigroup₃ α where
@@ -444,14 +455,7 @@ lemma nsmul₁_add {M : Type} [AddCommGroup₃ M] :
   | zero => simp only [nsmul₁, zero_add]
   | succ b ih =>
     simp only [add_nsmul₁, nsmul₁_one, ih]
-    -- ugh, cannot get this to work:
-    -- simp only [add_assoc₃, AddCommGroup₃.add_comm]
-    calc
-      nsmul₁ b m + nsmul₁ b n + (m + n) = nsmul₁ b m + (nsmul₁ b n + (m + n)) := by rw [add_assoc₃]
-      _                                 = nsmul₁ b m + ((nsmul₁ b n + m) + n) := by rw [add_assoc₃]
-      _                                 = nsmul₁ b m + ((m + nsmul₁ b n) + n) := by rw [AddCommGroup₃.add_comm m _]
-      _                                 = nsmul₁ b m + (m + (nsmul₁ b n + n)) := by rw [add_assoc₃]
-      _                                 = nsmul₁ b m + m + (nsmul₁ b n + n) := by rw [add_assoc₃]
+    ac_rfl  -- very useful here; the calc proof is many tedious lines long
 
 namespace AddCommGroup₃
 -- A bunch of lemmas we need to prove again because we're using AddCommGroup₃
@@ -535,9 +539,8 @@ lemma add_zsmul_asymm_helper {M : Type} [AddCommGroup₃ M] :
       rw [oh]
       have hmon : m = o + (n + 1) := by
         have _hnm : n + 1 ≤ m := by omega
-        rw [← Nat.succ_eq_add_one] at _hnm
         rw [Int.ofNat_add_negSucc, subNatNat_of_le _hnm] at oh
-        omega (config := { splitNatSub := true })
+        omega
       -- at this point we have arguments in canoncial form
       simp only [zsmul₁, nsmul₁]  -- using `simp only` in 3 different phases is needed here
       simp only [hmon, add_nsmul₁]
@@ -546,11 +549,12 @@ lemma add_zsmul_asymm_helper {M : Type} [AddCommGroup₃ M] :
     · have : m + -[n+1] < 0 := by exact (Int.add_lt_iff ↑m -[n+1] 0).mpr h2
       let ⟨o, oh⟩ := Int.eq_negSucc_of_lt_zero this
       rw [oh]
+
       -- oh : ↑m + -[n+1] = -[o+1]
       -- ⊢ m + o = n
       have hmon : (m: Int) + o = n := by
         calc
-          m + o = (m + -[n+1]) + o - -[n+1] := by simp [add_assoc₃, add_comm]
+          m + o = (m + -[n+1]) + o - -[n+1] := by simp only [add_comm, add_assoc₃, add_sub_cancel_left]
           _     = -[o+1] + o - -[n+1] := by rw [oh]
           _     = Int.subNatNat o o.succ - -[n+1] := by rw [Int.negSucc_add_ofNat _ _]
           _     = -[0+1] - -[n+1] := by rw [fun n => @Int.subNatNat_add_right n 0]
@@ -559,15 +563,13 @@ lemma add_zsmul_asymm_helper {M : Type} [AddCommGroup₃ M] :
             rw [Int.sub_eq_add_neg, Int.neg_negSucc]
             simp only [Nat.cast_one, reduceNeg, Nat.succ_eq_add_one, Nat.cast_add,
               neg_add_cancel_comm_assoc]
-      simp only [zsmul₁, nsmul₁]
       rw [Int.ofNat_add_ofNat, Int.ofNat_inj] at hmon  -- now we have (m: Nat) + o = n
+
+      simp only [zsmul₁, nsmul₁]
       rw [← hmon, add_nsmul₁]
       have : nsmul₁ m w + -(w + (nsmul₁ m w + nsmul₁ o w)) = -(w + nsmul₁ o w) := by
         calc
-          nsmul₁ m w + -(w + (nsmul₁ m w + nsmul₁ o w)) = nsmul₁ m w + -(nsmul₁ m w + (w + nsmul₁ o w)) := by
-            rw [← add_assoc₃]
-            rw [AddCommGroup₃.add_comm w _]
-            rw [add_assoc₃]
+          nsmul₁ m w + -(w + (nsmul₁ m w + nsmul₁ o w)) = nsmul₁ m w + -(nsmul₁ m w + (w + nsmul₁ o w)) := by ac_rfl
           _                                             = nsmul₁ m w + -(nsmul₁ m w) + -(w + nsmul₁ o w) := by
             rw [AddCommGroup₃.neg_of_add_eq_add_of_neg, add_assoc₃]
           _ =  -(w + nsmul₁ o w) := by rw [AddGroup₃.add_neg, zero_add]
@@ -585,8 +587,7 @@ lemma add_zsmul₁ {M : Type} [AddCommGroup₃ M] :
     rw [Int.negSucc_add_negSucc]
     simp only [zsmul₁, nsmul₁, add_nsmul₁]
     repeat rw [AddCommGroup₃.neg_of_add_eq_add_of_neg]
-    rw [ add_assoc₃, ← add_assoc₃ (-nsmul₁ m w) _, AddCommGroup₃.add_comm (-nsmul₁ m w) (-w),
-        add_assoc₃]
+    ac_rfl
 
 /-
 "Proving every AddCommGroup naturally has the structure of a ℤ-module is
@@ -640,7 +641,7 @@ instance abGrpModule (A : Type) [AddCommGroup₃ A] : Module₁ ℤ A where
       | l + 1 =>
         rw [Int.negSucc_mul_ofNat']
         have : j.succ * (l + 1) = j * l +j + l + 1 := by
-          rw [Nat.succ_eq_add_one, mul_add, add_mul, mul_one, one_mul]
+          rw [Nat.succ_eq_add_one, mul_add, add_mul, mul_one, one_mul]  -- eliminate muls
           omega
         -- below here proof is same as previous outer case
         simp only [zsmul₁, Int.ofNat_eq_coe, Int.ofNat_mul_negSucc, Int.ofNat_mul,
@@ -666,11 +667,10 @@ instance abGrpModule (A : Type) [AddCommGroup₃ A] : Module₁ ℤ A where
     | .negSucc j =>
       simp only [zsmul₁, nsmul₁, nsmul₁_add]
       repeat rw [AddCommGroup₃.neg_of_add_eq_add_of_neg]
-      -- ideally this would by handled by simp in M
-      rw [← add_assoc₃ (-m + -nsmul₁ j m) _,
-          add_assoc₃ (-m) (-nsmul₁ j m),
-          AddCommGroup₃.add_comm (-nsmul₁ j m) (-n),
-          ← add_assoc₃ (-m) (-n), ← add_assoc₃]
+      -- defining Std.Associative and Std.Commutative instances (way) above
+      -- lets us use the power of ac_rfl to prove equality up to assoc/comm
+      -- rewriting
+      ac_rfl
 
 
 #synth Module₁ ℤ ℤ -- abGrpModule ℤ
