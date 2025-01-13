@@ -20,7 +20,7 @@ instance [Monoid G] [Monoid H] : CoeFun (MonoidHom₁ G H) (fun _ ↦ G → H) w
   coe := MonoidHom₁.toFun
 
 attribute [coe] MonoidHom₁.toFun
-
+#check MonoidHom₁.ext
 
 example [Monoid G] [Monoid H] (f : MonoidHom₁ G H) : f 1 = 1 :=  f.map_one
 
@@ -61,6 +61,8 @@ instance [Monoid M] [Monoid N] [MonoidHomClass₂ F M N] : CoeFun F (fun _ ↦ M
 attribute [coe] MonoidHomClass₂.toFun
 
 
+-- Here, `MonoidHom₁` is the bundled morphism class, and `MonoidHomClass₂` is the typeclass
+-- for bundles(?) that are at least a monoid morphism.
 instance (M N : Type) [Monoid M] [Monoid N] : MonoidHomClass₂ (MonoidHom₁ M N) M N where
   toFun := MonoidHom₁.toFun
   map_one := fun f ↦ f.map_one
@@ -72,6 +74,8 @@ instance (R S : Type) [Ring R] [Ring S] : MonoidHomClass₂ (RingHom₁ R S) R S
   map_mul := fun f ↦ f.toMonoidHom₁.map_mul
 
 
+-- Lemmas proved about morphisms now can be applied in both the vanilla Monoid context and
+-- the richer Ring context.
 lemma map_inv_of_inv [Monoid M] [Monoid N] [MonoidHomClass₂ F M N] (f : F) {m m' : M} (h : m*m' = 1) :
     f m * f m' = 1 := by
   rw [← MonoidHomClass₂.map_mul, h, MonoidHomClass₂.map_one]
@@ -84,6 +88,7 @@ map_inv_of_inv f h
 
 
 
+-- `DFunLike` is a convenience that takes care of the coersion and its attributes
 class MonoidHomClass₃ (F : Type) (M N : outParam Type) [Monoid M] [Monoid N] extends
     DFunLike F M (fun _ ↦ N) where
   map_one : ∀ f : F, f 1 = 1
@@ -112,6 +117,11 @@ instance (α β : Type) [LE α] [LE β] : OrderPresHomClass (OrderPresHom α β)
 instance (α β : Type) [LE α] [Monoid α] [LE β] [Monoid β] :
     OrderPresHomClass (OrderPresMonoidHom α β) α β where
 
-instance (α β : Type) [LE α] [Monoid α] [LE β] [Monoid β] :
-    MonoidHomClass₃ (OrderPresMonoidHom α β) α β
-  := sorry
+instance (α β : Type) [LE α] [Monoid α] [LE β] [Monoid β] : MonoidHomClass₃ (OrderPresMonoidHom α β) α β where
+  coe := fun h => h.toFun
+  coe_injective' _ _ := OrderPresMonoidHom.ext
+  -- coe_injective' x x₁ := by
+  --   simp only
+  --   apply OrderPresMonoidHom.ext
+  map_one := fun f => f.map_one
+  map_mul := fun f => f.map_mul
