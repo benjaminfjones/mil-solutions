@@ -673,6 +673,21 @@ instance abGrpModule (A : Type) [AddCommGroup₃ A] : Module₁ ℤ A where
       ac_rfl
 
 
+/-
+Show which typeclass instance Lean finds for `Module₁ ℤ ℤ`. There are two to choose from.
+
+                                           selfModule
+                  ┌───────────► Ring Z ──────────────────────┐
+                  │                                          │
+                  │                                          │
+                  │                                          ▼
+Z ─────────► AddGroup Z                                Module Z Z
+                  │                                          ▲
+                  │                                          │
+                  └───────────► AddCommGroup Z ──────────────┘
+                                                 addGrpModule
+
+-/
 #synth Module₁ ℤ ℤ -- abGrpModule ℤ
 
 
@@ -680,7 +695,9 @@ class AddMonoid₄ (M : Type) extends AddSemigroup₃ M, AddZeroClass M where
   /-- Multiplication by a natural number. -/
   nsmul : ℕ → M → M := nsmul₁
   /-- Multiplication by `(0 : ℕ)` gives `0`. -/
-  nsmul_zero : ∀ x, nsmul 0 x = 0 := by intros; rfl
+  nsmul_zero : ∀ x, nsmul 0 x = 0 := by
+    intros
+    rfl
   /-- Multiplication by `(n + 1 : ℕ)` behaves as expected. -/
   nsmul_succ : ∀ (n : ℕ) (x), nsmul (n + 1) x = x + nsmul n x := by intros; rfl
 
@@ -692,6 +709,11 @@ instance (M N : Type) [AddMonoid₄ M] [AddMonoid₄ N] : AddMonoid₄ (M × N) 
   zero := (0, 0)
   zero_add := fun a ↦ by ext <;> apply zero_add
   add_zero := fun a ↦ by ext <;> apply add_zero
+  -- this field is unneeded because the default def in the class works
+  nsmul_zero := by
+    intros
+    rfl
+
 
 instance : AddMonoid₄ ℤ where
   add := (· + ·)
@@ -700,6 +722,8 @@ instance : AddMonoid₄ ℤ where
   zero_add := Int.zero_add
   add_zero := Int.add_zero
   nsmul := fun n m ↦ (n : ℤ) * m
+  -- If the specific proof for `nsmul_zero` is left out, `rfl` in the default
+  -- implementation fails
   nsmul_zero := Int.zero_mul
   nsmul_succ := fun n m ↦ show (n + 1 : ℤ) * m = m + n * m
     by rw [Int.add_mul, Int.add_comm, Int.one_mul]
