@@ -141,6 +141,18 @@ instance [CommMonoid M] (N : Submonoid M) : Monoid (M ⧸ N) where
       apply (Submonoid.Setoid N).iseqv.refl
   one := QuotientMonoid.mk N 1
   one_mul := by
-      sorry
+      -- essentially the same as the proof of `mul_assoc`
+      intro a
+      let ⟨a', ha'⟩  := quotient_map_surjective N a
+      repeat rw [← ha']
+      apply Quotient.sound
+      simp only [one_mul]
+      apply (Submonoid.Setoid N).iseqv.refl
   mul_one := by
-      sorry
+      -- ditto
+      intro a
+      let ⟨a', ha'⟩  := quotient_map_surjective N a
+      repeat rw [← ha']
+      apply Quotient.sound
+      simp only [mul_one]
+      apply (Submonoid.Setoid N).iseqv.refl
