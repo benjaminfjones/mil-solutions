@@ -3,7 +3,7 @@ import Mathlib.GroupTheory.Perm.Cycle.Concrete
 import Mathlib.GroupTheory.Perm.Subgroup
 import Mathlib.GroupTheory.PresentedGroup
 
-import MIL.Common
+import MilSolutions.Common
 
 example {M : Type*} [Monoid M] (x : M) : x * 1 = x := mul_one x
 
@@ -86,13 +86,31 @@ def conjugate {G : Type*} [Group G] (x : G) (H : Subgroup G) : Subgroup G where
   carrier := {a : G | ∃ h, h ∈ H ∧ a = x * h * x⁻¹}
   one_mem' := by
     dsimp
-    sorry
+    use 1
+    constructor
+    · apply H.one_mem
+    · rw [mul_one, mul_inv_cancel]
   inv_mem' := by
     dsimp
-    sorry
+    rintro x1 ⟨h, hmem, hh ⟩
+    use h⁻¹
+    constructor
+    · apply H.inv_mem
+      assumption
+    · have : x1 * (x * h⁻¹ * x⁻¹) = 1 := by
+        rw [hh]
+        group
+      exact inv_eq_of_mul_eq_one_right this
   mul_mem' := by
     dsimp
-    sorry
+    rintro a b ⟨ h1, h1mem, h1h ⟩
+    rintro ⟨ h2, h2mem, h2h ⟩
+    use h1 * h2
+    constructor
+    · exact mul_mem h1mem h2mem
+    · rw [h1h, h2h]
+      group
+
 
 example {G H : Type*} [Group G] [Group H] (G' : Subgroup G) (f : G →* H) : Subgroup H :=
   Subgroup.map f G'
