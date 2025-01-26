@@ -289,7 +289,7 @@ attribute [aesop unsafe 50%] zero_mul Ring₃.right_distrib
 
 -- Same example `neg_eq_neg_one_mul` where most of the proof steps are found automatically by
 -- aesop. Most are just applications of simp_all only [...]
-set_option trace.aesop true
+/- set_option trace.aesop true -/
 example {G : Type} [Ring₃ G] {a : G} : -a = -1 * a := by
   have : a + -1 * a = 0 := by
     calc
@@ -598,10 +598,10 @@ Current length: ~266 LOC
 instance abGrpModule (A : Type) [AddCommGroup₃ A] : Module₁ ℤ A where
   smul := zsmul₁
   -- zero_smul : ∀ m : M, (0 : R) • m = 0
-  zero_smul := by intro m; simp only [zsmul₁, nsmul₁]
+  zero_smul := by intro; simp only [zsmul₁, nsmul₁]
     -- aesop  -- or aesop solves it
   -- one_smul : ∀ m : M, (1 : R) • m = m
-  one_smul := by intro m; simp only [zsmul₁, nsmul₁, add_zero]
+  one_smul := by intro; simp only [zsmul₁, nsmul₁, add_zero]
 
   -- mul_smul : ∀ (a b : R) (m : M), (a * b) • m = a • b • m
   -- woof!
